@@ -1,0 +1,30 @@
+---
+title: "Lab01_CDP - Análise de Gastos de Deputados: Nossas Perguntas"
+author: "José Glauber"
+date: "29 de agosto de 2018"
+output: html_document
+---
+
+## Importanto os dados e bibliotecas
+
+```{r, echo=FALSE}
+library(tidyverse)
+dados <- read.csv("dadosCEAP.csv")
+```
+
+## Perguntas
+
+Quais são os deputados que gastaram mais dinheiro da CEAP? Quais são os mais econômicos?
+
+```{r}
+dados %>%
+  group_by(nomeParlamentar) %>%
+  summarise(somaValorLiquido = sum(valorLíquido)) %>%
+  arrange(-somaValorLiquido) %>% na.omit() %>%
+  slice(1:20) %>%
+  ggplot(dados, aes(y = somaValorLiquido, x = reorder()))
+
+```
+
+
+

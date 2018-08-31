@@ -14,17 +14,37 @@ dados <- read.csv("dadosCEAP.csv")
 
 ## Perguntas
 
-Quais são os deputados que gastaram mais dinheiro da CEAP? Quais são os mais econômicos?
+1) Quais são os deputados que gastaram mais dinheiro da CEAP? Quais são os mais econômicos?
 
 ```{r}
 dados %>%
   group_by(nomeParlamentar) %>%
+  filter(valorLíquido > 0) %>%
   summarise(somaValorLiquido = sum(valorLíquido)) %>%
   arrange(-somaValorLiquido) %>% na.omit() %>%
   slice(1:30) %>%
   ggplot(aes(x = reorder(nomeParlamentar, somaValorLiquido), y = somaValorLiquido)) +
-  geom_col() + coord_flip() + labs(title = "30 primeiros deputados que mais gastaram o dinheiro da CEAP", x = "Nome do deputado", y = "Soma dos gastos do deputado" )
+  geom_col() + coord_flip() + labs(title = "30 primeiros deputados que mais gastaram o dinheiro da CEAP", x = "Nome do deputado", y = "Soma dos gastos do deputado")
 ```
 
+```{r}
+dados %>%
+  group_by(nomeParlamentar) %>%
+  filter(valorLíquido > 0) %>%
+  summarise(somaValorLiquido = sum(valorLíquido)) %>%
+  arrange(somaValorLiquido) %>% na.omit() %>%
+  slice(1:30) %>%
+  ggplot(aes(x = reorder(nomeParlamentar, somaValorLiquido), y = somaValorLiquido)) +
+  geom_bar(stat = "identity") + coord_flip() + labs(title = "30 deputados que menos gastaram o dinheiro da CEAP", x = "Nome do deputado", y = "Soma dos gastos do deputado") + scale_fill_brewer(palette = "Blues")
+```
 
+2) Quais os estados cujos deputados gastam mais no exterior? Quais os estados cujos deputados gastam menos no exterior?
 
+```{r}
+ dados %>% 
+  filter(valorLíquido > 0)%>%
+  filter(tipoDocumento == 2) %>% 
+  group_by(sgUF) %>% 
+  summarise(maisGastaram = sum(valorLíquido)) %>% na.omit() %>%
+  arrange(-maisastaram)
+```

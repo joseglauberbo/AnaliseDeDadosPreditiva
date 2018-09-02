@@ -5,12 +5,12 @@ date: "29 de agosto de 2018"
 output: html_document
 ---
 
-## Importanto os dados e bibliotecas
+## Importanto os dados e bibliotecas necessárias até a questão 3
 
 ```{r, echo=FALSE}
 library(tidyverse)
 dados <- readr::read_csv("dadosCEAP.csv")
-valoresDosLimites <- readr::read_csv("limiteMensalCEAP.csv")
+dados$valorGlosa <- as.numeric(sub(",", ".", dados$valorGlosa, fixed = TRUE))
 ```
 
 ## Perguntas
@@ -18,11 +18,12 @@ valoresDosLimites <- readr::read_csv("limiteMensalCEAP.csv")
 1) Quais são os deputados que gastaram mais dinheiro da CEAP? Quais são os mais econômicos?
 
 ```{r}
-dados %>%
+dados%>%
   group_by(nomeParlamentar) %>%
   filter(valorLíquido > 0) %>%
   summarise(somaValorLiquido = sum(valorLíquido)) %>%
-  arrange(-somaValorLiquido) %>% na.omit() %>%
+  arrange(-somaValorLiquido) %>% 
+  na.omit() %>%
   slice(1:30) %>%
   ggplot(aes(x = reorder(nomeParlamentar, somaValorLiquido), y = somaValorLiquido)) +
   geom_col() + coord_flip() + labs(title = "30 primeiros deputados que mais gastaram o dinheiro da CEAP", x = "Nome do deputado", y = "Soma dos gastos do deputado")
@@ -42,7 +43,7 @@ dados %>%
 2) Quais os estados cujos deputados gastam mais no exterior? Quais os estados cujos deputados gastam menos no exterior?
 
 ```{r}
- dados %>% 
+dados %>% 
   filter(valorLíquido > 0)%>%
   filter(tipoDocumento == 2) %>% 
   group_by(sgUF) %>% 
@@ -88,32 +89,89 @@ dados %>%
   arrange(qtDinheiroRS)
 ```
 
+#Importando dados necessários para q questão 4
 ```{r}
-dados %>%
-  group_by(sgPartido) %>% 
-  na.omit() %>%
-  filter(sgUF == "PB") %>% 
-  summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
-  arrange(-qtDinheiroRS)
+valoresDosLimites <- readr::read_csv("limiteMensalCEAP.csv")
+names(valoresDosLimites) <- c("sgUF", "limite_mensal")
+novosDados <- merge(dados, valoresDosLimites, by= "sgUF", all = TRUE)
 ```
 
 4) Quais os deputados que mais ultrapassam o limite de CEAP do seu estado?
 
 ```{r}
-
-
+novosDados%>% 
+  group_by(nomeParlamentar, sgUF, limite_mensal) %>% 
+  summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
+  filter(limite_mensal > qtDinheiroRS) %>% 
+  summarise(diferenca = limite_mensal - qtDinheiroRS) %>% 
+  arrange(-diferenca)
 ``` 
 
+5) Quais estados cujos parlamentares gastam mais com passagens aéreas?
 
+```{r}
+dados%>% 
+  group_by(sgUF) %>% 
+  filter(tipoDespesa == "Emissão Bilhete Aéreo") %>% 
+  filter(valorDocumento > 0) %>% 
+  summarise(valorTotal = sum(valorLíquido)) %>% 
+  arrange(-valorTotal)
+```
 
+6) Escolha três partidos e responda: Quais são os tipos de despesa mais utilizados no uso da CEAP pelos deputados desses partidos? Mesma pergunta considerando valores em R$.
 
+```{r}
+dados%>%
+  group_by(tipoDespesa) %>%
+  na.omit() %>% 
+  filter(sgPartido == "PMDB") %>% 
+  summarise(qtDespesa = n()) %>% 
+  arrange(-qtDespesa) %>% 
+  slice(1:10)
+```
 
+```{r}
+dados%>%
+  group_by(tipoDespesa) %>%
+  filter(sgPartido == "PT") %>% 
+  summarise(qtDespesa = n()) %>% 
+  arrange(-qtDespesa) %>% 
+  slice(1:10)
+```
 
+```{r}
+dados%>%
+  group_by(tipoDespesa) %>%
+  filter(sgPartido == "PSOL") %>% 
+  summarise(qtDespesa = n()) %>% 
+  arrange(-qtDespesa) %>% 
+  slice(1:10)
+```
 
+#avaliando através dos valores
+```{r}
+dados%>%
+  group_by(tipoDespesa) %>%
+  filter(sgPartido == "PMDB") %>% 
+  summarise(valorDespesa = sum(valorLíquido)) %>% 
+  arrange(-valorDespesa) %>% 
+  slice(1:10)
+```
 
+```{r}
+dados%>%
+  group_by(tipoDespesa) %>%
+  filter(sgPartido == "PT") %>% 
+  summarise(valorDespesa = sum(valorLíquido)) %>% 
+  arrange(-valorDespesa) %>% 
+  slice(1:10)
+```
 
-
-
-
-
-
+```{r}
+dados%>%
+  group_by(tipoDespesa) %>%
+  filter(sgPartido == "PSOL") %>% 
+  summarise(valorDespesa = sum(valorLíquido)) %>% 
+  arrange(-valorDespesa) %>% 
+  slice(1:10)
+```

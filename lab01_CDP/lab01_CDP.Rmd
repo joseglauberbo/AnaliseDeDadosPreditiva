@@ -9,7 +9,8 @@ output: html_document
 
 ```{r, echo=FALSE}
 library(tidyverse)
-dados <- read.csv("dadosCEAP.csv")
+dados <- readr::read_csv("dadosCEAP.csv")
+valoresDosLimites <- readr::read_csv("limiteMensalCEAP.csv")
 ```
 
 ## Perguntas
@@ -45,6 +46,74 @@ dados %>%
   filter(valorLíquido > 0)%>%
   filter(tipoDocumento == 2) %>% 
   group_by(sgUF) %>% 
-  summarise(maisGastaram = sum(valorLíquido)) %>% na.omit() %>%
-  arrange(-maisastaram)
+  summarise(maisGastaram = sum(valorLíquido)) %>% 
+  na.omit() %>%
+  arrange(-maisGastaram)
 ```
+
+3) Quais os partidos cujos parlamentares mais usam CEAP no estado da Paraíba? Quais são os que menos usam? Mesmas perguntas considerando valores em R$.
+```{r}
+dados %>%
+  group_by(sgPartido) %>% 
+  na.omit() %>%
+  filter(sgUF == "PB") %>% 
+  summarise(qtDeUsos = n()) %>% 
+  arrange(-qtDeUsos)
+```
+
+```{r}
+dados %>%
+  group_by(sgPartido) %>% 
+  na.omit() %>%
+  filter(sgUF == "PB") %>% 
+  summarise(qtDeUsos = n()) %>% 
+  arrange(qtDeUsos)
+```
+
+```{r}
+dados %>%
+  group_by(sgPartido) %>% 
+  na.omit() %>%
+  filter(sgUF == "PB") %>% 
+  summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
+  arrange(-qtDinheiroRS)
+```
+
+```{r}
+dados %>%
+  group_by(sgPartido) %>% 
+  na.omit() %>%
+  filter(sgUF == "PB") %>% 
+  summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
+  arrange(qtDinheiroRS)
+```
+
+```{r}
+dados %>%
+  group_by(sgPartido) %>% 
+  na.omit() %>%
+  filter(sgUF == "PB") %>% 
+  summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
+  arrange(-qtDinheiroRS)
+```
+
+4) Quais os deputados que mais ultrapassam o limite de CEAP do seu estado?
+
+```{r}
+
+
+``` 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

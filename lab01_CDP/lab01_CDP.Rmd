@@ -37,19 +37,21 @@ dados %>%
   arrange(somaValorLiquido) %>% na.omit() %>%
   slice(1:30) %>%
   ggplot(aes(x = reorder(nomeParlamentar, somaValorLiquido), y = somaValorLiquido)) +
-  geom_bar(stat = "identity") + coord_flip() + labs(title = "30 deputados que menos gastaram o dinheiro da CEAP", x = "Nome do deputado", y = "Soma dos gastos do deputado") + scale_fill_brewer(palette = "Blues")
+  geom_col() + coord_flip() + labs(title = "30 deputados que menos gastaram o dinheiro da CEAP", x = "Nome do deputado", y = "Soma dos gastos do deputado")
 ```
 
 2) Quais os estados cujos deputados gastam mais no exterior? Quais os estados cujos deputados gastam menos no exterior?
 
 ```{r}
 dados %>% 
-  filter(valorLíquido > 0)%>%
+  filter(valorLíquido > 0) %>%
   filter(tipoDocumento == 2) %>% 
   group_by(sgUF) %>% 
   summarise(maisGastaram = sum(valorLíquido)) %>% 
   na.omit() %>%
-  arrange(-maisGastaram)
+  arrange(-maisGastaram) %>% 
+  ggplot(aes(x = reorder(sgUF, maisGastaram), y = maisGastaram)) +
+  geom_col() + labs(title = "30 estados que mais gastaram no exterior", x = "Sigla do estado", y = "Soma dos gastos do estado")
 ```
 
 3) Quais os partidos cujos parlamentares mais usam CEAP no estado da Paraíba? Quais são os que menos usam? Mesmas perguntas considerando valores em R$.
@@ -59,25 +61,9 @@ dados %>%
   na.omit() %>%
   filter(sgUF == "PB") %>% 
   summarise(qtDeUsos = n()) %>% 
-  arrange(-qtDeUsos)
-```
-
-```{r}
-dados %>%
-  group_by(sgPartido) %>% 
-  na.omit() %>%
-  filter(sgUF == "PB") %>% 
-  summarise(qtDeUsos = n()) %>% 
-  arrange(qtDeUsos)
-```
-
-```{r}
-dados %>%
-  group_by(sgPartido) %>% 
-  na.omit() %>%
-  filter(sgUF == "PB") %>% 
-  summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
-  arrange(-qtDinheiroRS)
+  arrange(-qtDeUsos) %>% 
+  ggplot(aes(x = reorder(sgPartido, qtDeUsos), y = qtDeUsos)) +
+  geom_col() + labs(title = "Partidos que mais usam a CEAP no estado da Paraíba", x = "Partidos", y = "Usos da CEAP")
 ```
 
 ```{r}
@@ -86,11 +72,13 @@ dados %>%
   na.omit() %>%
   filter(sgUF == "PB") %>% 
   summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
-  arrange(qtDinheiroRS)
+  arrange(-qtDinheiroRS) %>% 
+  ggplot(aes(x = reorder(sgPartido, qtDinheiroRS), y = qtDinheiroRS)) +
+  geom_col() + labs(title = "Partidos que mais usam a CEAP no estado da Paraíba considerando o valor", x = "Soma dos valores de usos", y = "Partido")
 ```
 
 #Importando dados necessários para q questão 4
-```{r}
+```{r echo=FALSE} 
 valoresDosLimites <- readr::read_csv("limiteMensalCEAP.csv")
 names(valoresDosLimites) <- c("sgUF", "limite_mensal")
 novosDados <- merge(dados, valoresDosLimites, by= "sgUF", all = TRUE)
@@ -104,18 +92,22 @@ novosDados%>%
   summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
   filter(limite_mensal > qtDinheiroRS) %>% 
   summarise(diferenca = limite_mensal - qtDinheiroRS) %>% 
-  arrange(-diferenca)
+  arrange(-diferenca) 
 ``` 
 
 5) Quais estados cujos parlamentares gastam mais com passagens aéreas?
 
+##acho q ta faltando uma variavel, tirar duvida na aula
 ```{r}
 dados%>% 
   group_by(sgUF) %>% 
   filter(tipoDespesa == "Emissão Bilhete Aéreo") %>% 
   filter(valorDocumento > 0) %>% 
   summarise(valorTotal = sum(valorLíquido)) %>% 
-  arrange(-valorTotal)
+  arrange(-valorTotal) %>% 
+  ggplot(aes(x = reorder(sgUF, valorTotal), y = valorTotal)) +
+  geom_col() + labs(title = "Estados cujos parlamentares gastam mas com passagens aéreas", x = "Estados", y = "Gastos em passagens aéreas")
+
 ```
 
 6) Escolha três partidos e responda: Quais são os tipos de despesa mais utilizados no uso da CEAP pelos deputados desses partidos? Mesma pergunta considerando valores em R$.
@@ -123,11 +115,12 @@ dados%>%
 ```{r}
 dados%>%
   group_by(tipoDespesa) %>%
-  na.omit() %>% 
   filter(sgPartido == "PMDB") %>% 
   summarise(qtDespesa = n()) %>% 
   arrange(-qtDespesa) %>% 
-  slice(1:10)
+  slice(1:10) %>% 
+  ggplot(aes(x = reorder(tipoDespesa, qtDespesa), y = qtDespesa)) +
+  geom_col() + coord_flip() +labs(title = "Despesas mais utilizadas do partipo PMDB", x = "Despesa", y = "quantidade da despesa")
 ```
 
 ```{r}
@@ -136,7 +129,9 @@ dados%>%
   filter(sgPartido == "PT") %>% 
   summarise(qtDespesa = n()) %>% 
   arrange(-qtDespesa) %>% 
-  slice(1:10)
+  slice(1:10) %>% 
+  ggplot(aes(x = reorder(tipoDespesa, qtDespesa), y = qtDespesa)) +
+  geom_col() + coord_flip() +labs(title = "Despesas mais utilizadas do partipo PT", x = "Despesa", y = "quantidade da despesa")
 ```
 
 ```{r}
@@ -145,7 +140,9 @@ dados%>%
   filter(sgPartido == "PSOL") %>% 
   summarise(qtDespesa = n()) %>% 
   arrange(-qtDespesa) %>% 
-  slice(1:10)
+  slice(1:10) %>% 
+  ggplot(aes(x = reorder(tipoDespesa, qtDespesa), y = qtDespesa)) +
+  geom_col() + coord_flip() +labs(title = "Despesas mais utilizadas do partipo PSOL", x = "Despesa", y = "quantidade da despesa")
 ```
 
 #avaliando através dos valores
@@ -155,7 +152,9 @@ dados%>%
   filter(sgPartido == "PMDB") %>% 
   summarise(valorDespesa = sum(valorLíquido)) %>% 
   arrange(-valorDespesa) %>% 
-  slice(1:10)
+  slice(1:10) %>% 
+  ggplot(aes(x = reorder(tipoDespesa, valorDespesa), y = valorDespesa)) +
+  geom_col() + coord_flip() +labs(title = "Despesas mais utilizadas do partipo PMDB", x = "Despesa", y = "Valor da despesa")
 ```
 
 ```{r}
@@ -164,7 +163,9 @@ dados%>%
   filter(sgPartido == "PT") %>% 
   summarise(valorDespesa = sum(valorLíquido)) %>% 
   arrange(-valorDespesa) %>% 
-  slice(1:10)
+  slice(1:10) %>% 
+  ggplot(aes(x = reorder(tipoDespesa, valorDespesa), y = valorDespesa)) +
+  geom_col() + coord_flip() +labs(title = "Despesas mais utilizadas do partipo PT", x = "Despesa", y = "Valor da despesa")
 ```
 
 ```{r}
@@ -173,5 +174,7 @@ dados%>%
   filter(sgPartido == "PSOL") %>% 
   summarise(valorDespesa = sum(valorLíquido)) %>% 
   arrange(-valorDespesa) %>% 
-  slice(1:10)
+  slice(1:10) %>% 
+  ggplot(aes(x = reorder(tipoDespesa, valorDespesa), y = valorDespesa)) +
+  geom_col() + coord_flip() +labs(title = "Despesas mais utilizadas do partipo PSOL", x = "Despesa", y = "Valor da despesa")
 ```

@@ -5,80 +5,104 @@ date: "29 de agosto de 2018"
 output: html_document
 ---
 
-## Importanto os dados e bibliotecas necessárias até a questão 3
+## Importanto os dados e bibliotecas necessárias para as respostas das questões!
 
-```{r, echo=FALSE}
+```{r}
 library(tidyverse)
 dados <- readr::read_csv("dadosCEAP.csv")
 dados$valorGlosa <- as.numeric(sub(",", ".", dados$valorGlosa, fixed = TRUE))
 ```
 
+OBS: Antes é importante ressaltarmos que, cada linha da tabela de observação representa uma transação que foi realizada por algum parlamentar, a seguir está descrito o que cada variável da tabela representa: 
+  
+  * nomeParlamentar: Nome adotado pelo Parlamentar ao tomar posse do seu mandato.
+  * idCadastro: Número que identifica unicamente um deputado federal na CD.
+  * sgUF: No contexto da cota CEAP, representa a unidade da federação pela qual o deputado foi eleito e é utilizada para definir o valor da cota a que o deputado tem.
+  * sgPartido: Sigla do partido do parlamentar. 
+  * tipoDespesa: O seu conteúdo é a descrição do Tipo de Despesa relativo à despesa em questão.
+  * especDespesa: Representa a descrição  especificação mais detalhada de um referido Tipo de Despesa.
+  * fornecedor: O conteúdo deste dado representa o nome do fornecedor do produto ou serviço presente no documento fiscal
+  * CNPJCPF: O conteúdo deste dado representa o CNPJ ou o CPF do emitente do documento fiscal, quando se tratar do uso da cota em razão do reembolso despesas comprovadas pela emissão de documentos fiscais.
+  * tipoDocumento: Este dado representa o tipo de documento do fiscal – 0 (Zero), para Nota Fiscal; 1 (um), para Recibo; e 2, para Despesa no Exterior.
+  * dataEmissao: O conteúdo deste dado é a data de emissão do documento fiscal ou a data do documento que tenha dado causa à despesa.
+  * valorDocumento: O seu conteúdo é o valor de face do documento fiscal ou o valor do documento que deu causa à despesa. Quando se tratar de bilhete aéreo, esse valor poderá ser negativo, significando que o referido bilhete é um bilhete de compensação, pois compensa um outro bilhete emitido e não utilizado pelo deputado (idem para o dado vlrLiquido abaixo).
+  * valorGlosa: O seu conteúdo representa o valor da glosa do documento fiscal que incidirá sobre o Valor do Documento, ou o valor da glosa do documento que deu causa à despesa.
+  * valorLiquido: O seu conteúdo representa o valor líquido do documento fiscal ou do documento que deu causa à despesa e será calculado pela diferença entre o Valor do Documento e o Valor da Glosa. É este valor que será debitado da cota do deputado. Caso o débito seja do Tipo Telefonia e o valor seja igual a zero, significa que a despesa foi franqueada.
+  
 ## Perguntas
-
 1) Quais são os deputados que gastaram mais dinheiro da CEAP? Quais são os mais econômicos?
 
+  Para obtermos quas os deputados que mais gastaram dinheiro da CEAP é necessário que possamos agrupar pelos deputados e verificarmos sempre o valor líquido realizado a cada transação (cada linha da tabela), daí podemos ir somando o valor de cada uma delas e saber especificamente o que cada parlamentar gastou. Como são muitos parlamentares, foi escolhida uma amostra com tamanho 30, que representam de forma decrescente aqueles que mais gastaram. Esses foram representados através de um gráfico de barras para que assim pudemos ter uma melhor visualização. Podemos verificar que o primeiro, Edio Lopes, teve uma diferença considerável em relação aos outros, porém a partir do terceiro parlamentar a variação entre o gasto pouco visível no gráfico. É importante ressaltar que, foi retirado, se existissem, candifatos que possuíssem apenas informações com NA, pois para essa pergunta não interessava para o estudo se não possuísse as informações necessárias para respondê-la.
 ```{r}
 dados%>%
   group_by(nomeParlamentar) %>%
   filter(valorLíquido > 0) %>%
   summarise(somaValorLiquido = sum(valorLíquido)) %>%
   arrange(-somaValorLiquido) %>% 
-  na.omit() %>%
   slice(1:30) %>%
+  na.omit() %>%
   ggplot(aes(x = reorder(nomeParlamentar, somaValorLiquido), y = somaValorLiquido)) +
   geom_col() + coord_flip() + labs(title = "30 primeiros deputados que mais gastaram o dinheiro da CEAP", x = "Nome do deputado", y = "Soma dos gastos do deputado")
 ```
-
+  Analogamente foi feito abaixo. Uma coisa que podemos observar diferente do gráfico acima, é que existe uma variação maior entre os gastos dos parlamentares, ou seja, esses valores vão diminuindo com bastante diferença. Como são muitos parlamentares, foi escolhida uma amostra com tamanho 30, que representam de forma decrescente aqueles que menos gastaram. Durante a construção do gráfico, alguns parlamentares foram identificados como se tivessem gastado negativo, mas o que isso significa? Que alguns valores gastos em passagens aéreas representam bilhetes de compensação, pois irá compensar um outro bilhete emitido e não utilizado pelo deputado, o que faz com que alguns valores líquidos sejam negativos, porém não faz sentido plotar em um grafico como se o deputados tivesse gastado negativo, por isso esses valores foram desconsiderados para a visualização, através do filter, sendo Camilo Cola o parlamentar que menos gastou o dinheiro da CEAP.
+  
 ```{r}
 dados %>%
   group_by(nomeParlamentar) %>%
   filter(valorLíquido > 0) %>%
   summarise(somaValorLiquido = sum(valorLíquido)) %>%
-  arrange(somaValorLiquido) %>% na.omit() %>%
+  arrange(somaValorLiquido) %>%
   slice(1:30) %>%
+  na.omit() %>%
   ggplot(aes(x = reorder(nomeParlamentar, somaValorLiquido), y = somaValorLiquido)) +
   geom_col() + coord_flip() + labs(title = "30 deputados que menos gastaram o dinheiro da CEAP", x = "Nome do deputado", y = "Soma dos gastos do deputado")
 ```
 
 2) Quais os estados cujos deputados gastam mais no exterior? Quais os estados cujos deputados gastam menos no exterior?
-
+  
+  Para a resposta dessas perguntas foi necessário que pudessemos avaliar qual era o tipo de documento para que pudessemos fazer a soma do valor Líquido apenas daquilo que fosse gasto no exterior. Podemos perceber que, o gráfico em si, responde as duas perguntas, quais são os estados que mais gastaram e que menos gastaram. Isso acontece porque nem todos os estados brasileiros estão representados no gráfico. Mas por que isso ocorre? Porque existem estados que não tiveram nenhum gasto com o exterior, o que faz com que esses não entrem na visualização. Se compararmos o estado que mais gastou (SP) com o que menos gastou (MA) vemos uma diferença significativa, assim como se analisarmos estado por estado, alguns possuem uma diferença bastante relevante em relação ao outro. 
 ```{r}
 dados %>% 
   filter(valorLíquido > 0) %>%
   filter(tipoDocumento == 2) %>% 
   group_by(sgUF) %>% 
   summarise(maisGastaram = sum(valorLíquido)) %>% 
-  na.omit() %>%
   arrange(-maisGastaram) %>% 
+  na.omit() %>%
   ggplot(aes(x = reorder(sgUF, maisGastaram), y = maisGastaram)) +
   geom_col() + labs(title = "30 estados que mais gastaram no exterior", x = "Sigla do estado", y = "Soma dos gastos do estado")
 ```
 
 3) Quais os partidos cujos parlamentares mais usam CEAP no estado da Paraíba? Quais são os que menos usam? Mesmas perguntas considerando valores em R$.
+
+  É importante ressaltar que, essas duas perguntas possuem uma relação e uma curiosidade a ser analisada. Para verificarmos quais os partidos que mais usam a CEAP no estado da Paraíba é necessário verificarmos a sua frequência na tabela, ou seja, se cada linha representa uma transação feita por determinado parlamentar, é necessário verificar em quantas linhas esse partido realiza qualquer transação. Podemos analisar que o PMDB é o partido que disparadamente é o que mais mais usa o CEAP para realização de transações, e partir dele, fica quase que normalizado para os outros partidos.
 ```{r}
 dados %>%
   group_by(sgPartido) %>% 
-  na.omit() %>%
   filter(sgUF == "PB") %>% 
   summarise(qtDeUsos = n()) %>% 
   arrange(-qtDeUsos) %>% 
+  na.omit() %>% 
   ggplot(aes(x = reorder(sgPartido, qtDeUsos), y = qtDeUsos)) +
   geom_col() + labs(title = "Partidos que mais usam a CEAP no estado da Paraíba", x = "Partidos", y = "Usos da CEAP")
 ```
-
+  Em relação a pergunta considerando os valores em R$ é a mesma coisa, porém ao invés de somarmos a frenquência com que determinado partido realiza uma transação, somamos o valor Líquido a cada passada na tabela de dados. Analogamente, podemos analisar que, o PMDB é também o partido que mais gasta o dinheiro do CEAP.
 ```{r}
 dados %>%
   group_by(sgPartido) %>% 
-  na.omit() %>%
   filter(sgUF == "PB") %>% 
   summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
   arrange(-qtDinheiroRS) %>% 
+  na.omit() %>%
   ggplot(aes(x = reorder(sgPartido, qtDinheiroRS), y = qtDinheiroRS)) +
   geom_col() + labs(title = "Partidos que mais usam a CEAP no estado da Paraíba considerando o valor", x = "Soma dos valores de usos", y = "Partido")
 ```
-
+  A curiosidade importante a se verificar é que: O partido que mais aparece realizando transações é também o partido que mais gasta o dinheiro, isso já era esperado, pois quanto maior sua frequência na tabela, mais provável que você gaste o dinheiro, porém se analisarmos os outros partidos, vemos que existe uma mudança na classificação de um gráfico para o outro.
+  
 #Importando dados necessários para q questão 4
-```{r echo=FALSE} 
+
+Para responder a questão 4, foi necessário fazer um merge com a tabela que mostrava quais os valores dos limites que cada 
+```{r} 
 valoresDosLimites <- readr::read_csv("limiteMensalCEAP.csv")
 names(valoresDosLimites) <- c("sgUF", "limite_mensal")
 novosDados <- merge(dados, valoresDosLimites, by= "sgUF", all = TRUE)
@@ -97,21 +121,30 @@ novosDados%>%
 
 5) Quais estados cujos parlamentares gastam mais com passagens aéreas?
 
-##acho q ta faltando uma variavel, tirar duvida na aula
+  Para sabermos quais os estados que mais gastam com passagens aéreas, é necessário que possamos verificar qual o tipo de despesa, que nesse caso serão: "Emissão de bilhete aéreo" e PASSAGENS AÉREAS" e assim que for verificando em cada linha (transação) vai somando o valor Líquido para que possamos ter o gasto total. É importante ressaltar que São Paulo fica disparadamente na frente dos outros estados com o gasto nesse tipo de despesa, enquanto DF possui uma quantia gasta muito baixa em relação ao primeiro colocado. Podemos destacar que foi usado também um filtro para que fossem pegos apenas os valores positivos do documento, pois como já foi citado anteriormente, esse valor pode ser negativo se o bilhete for de compensação, o que não nos interessa no estudo dessa pergunta.
+  
 ```{r}
 dados%>% 
   group_by(sgUF) %>% 
-  filter(tipoDespesa == "Emissão Bilhete Aéreo") %>% 
+  filter(tipoDespesa == "Emissão Bilhete Aéreo" | tipoDespesa == "PASSAGENS AÉREAS") %>% 
   filter(valorDocumento > 0) %>% 
   summarise(valorTotal = sum(valorLíquido)) %>% 
   arrange(-valorTotal) %>% 
+  na.omit() %>% 
   ggplot(aes(x = reorder(sgUF, valorTotal), y = valorTotal)) +
-  geom_col() + labs(title = "Estados cujos parlamentares gastam mas com passagens aéreas", x = "Estados", y = "Gastos em passagens aéreas")
+  geom_col() + labs(title = "Estados cujos parlamentares gastam mais com passagens aéreas", x = "Estados", y = "Gastos em passagens aéreas")
 
 ```
 
 6) Escolha três partidos e responda: Quais são os tipos de despesa mais utilizados no uso da CEAP pelos deputados desses partidos? Mesma pergunta considerando valores em R$.
 
+  Os partidos escolhidos foram: 
+    * PMDB
+    * PT
+    * PSOL
+  
+  Para a primeira pergunta é importante analisar que todos os 10 primeiros tipos de despesa (que foram os escolhidos para serem visualizados) são os mesmos para os três partidos, apenas mudando as posições de classificação, ficando gastos com passagens aéreas em primeiro lugar em todos os partidos, o que já era esperado, visto que na pergunta anterior pudemos analisar que os gastos representados por essas despesas eram bastantes significativos, o que pode implicar em maiores frequências na tabela. A forma como foi feita a análise foi da mesma forma de análises anteriores, agrupamos por tipo de defesa e fomos contabilizando a cada linha a frequência dela. Essa mesma forma foi feita para os três partidos escolhidos.
+    
 ```{r}
 dados%>%
   group_by(tipoDespesa) %>%
@@ -144,7 +177,8 @@ dados%>%
   ggplot(aes(x = reorder(tipoDespesa, qtDespesa), y = qtDespesa)) +
   geom_col() + coord_flip() +labs(title = "Despesas mais utilizadas do partipo PSOL", x = "Despesa", y = "quantidade da despesa")
 ```
-
+  Analogamente foi feito para verificarmos qual o tipo de despesa que possui mais gasto por partido, é interessante ressaltarmos que apenas o PMDB não possui "Emissão de bilhete aéreo" liderando os maiores gastos, pois fica na segunda posição. Em relação as outras despesas podemos citar também que no top 10 do PT entra uma tipo de despesa que nos outros não tinha aparecido, que é "Locação ou fretamento de aeronaves". Essa análise foi feita verificando qual o tipo de partido que estava sendo analisado e somando os valores líquidos de suas despesas, fazendo com que assim, pudéssemos ter esses valores separados por variáveis. 
+  
 #avaliando através dos valores
 ```{r}
 dados%>%

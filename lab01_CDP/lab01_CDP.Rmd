@@ -44,6 +44,7 @@ dados%>%
   ggplot(aes(x = reorder(nomeParlamentar, somaValorLiquido), y = somaValorLiquido)) +
   geom_col() + coord_flip() + labs(title = "30 primeiros deputados que mais gastaram o dinheiro da CEAP", x = "Nome do deputado", y = "Soma dos gastos do deputado")
 ```
+  
   Analogamente foi feito abaixo. Uma coisa que podemos observar diferente do gráfico acima, é que existe uma variação maior entre os gastos dos parlamentares, ou seja, esses valores vão diminuindo com bastante diferença. Como são muitos parlamentares, foi escolhida uma amostra com tamanho 30, que representam de forma decrescente aqueles que menos gastaram. Durante a construção do gráfico, alguns parlamentares foram identificados como se tivessem gastado negativo, mas o que isso significa? Que alguns valores gastos em passagens aéreas representam bilhetes de compensação, pois irá compensar um outro bilhete emitido e não utilizado pelo deputado, o que faz com que alguns valores líquidos sejam negativos, porém não faz sentido plotar em um grafico como se o deputados tivesse gastado negativo, por isso esses valores foram desconsiderados para a visualização, através do filter, sendo Camilo Cola o parlamentar que menos gastou o dinheiro da CEAP.
   
 ```{r}
@@ -101,7 +102,7 @@ dados %>%
   
 #Importando dados necessários para q questão 4
 
-Para responder a questão 4, foi necessário fazer um merge com a tabela que mostrava quais os valores dos limites que cada 
+Para responder a questão 4, foi necessário fazer um merge com a tabela que mostrava quais os valores dos limites que cada estado poderia possuir, abaixo segue o código relacionado. 
 ```{r} 
 valoresDosLimites <- readr::read_csv("limiteMensalCEAP.csv")
 names(valoresDosLimites) <- c("sgUF", "limite_mensal")
@@ -109,19 +110,20 @@ novosDados <- merge(dados, valoresDosLimites, by= "sgUF", all = TRUE)
 ```
 
 4) Quais os deputados que mais ultrapassam o limite de CEAP do seu estado?
-
+  
+  Assim que fizemos o merge entre as tabelas, pudemos ver que os valores foram colocados na tabela, o que faz com que pudessemos ver a diferença entre o limite do deputado e o que ele gastou, daí poderíamos ver através da coluna de diferença quais os que mais ultrapassaram o limite do CEAP. Podemos ver que em cada estado possui alguns constrates, sendo Henrique Oliveira o que mais ultrapassa o seu limite, seu estado é o AM.
 ```{r}
 novosDados%>% 
   group_by(nomeParlamentar, sgUF, limite_mensal) %>% 
   summarise(qtDinheiroRS = sum(valorLíquido)) %>% 
   filter(limite_mensal > qtDinheiroRS) %>% 
   summarise(diferenca = limite_mensal - qtDinheiroRS) %>% 
-  arrange(-diferenca) 
+  arrange(-diferenca)
 ``` 
 
 5) Quais estados cujos parlamentares gastam mais com passagens aéreas?
 
-  Para sabermos quais os estados que mais gastam com passagens aéreas, é necessário que possamos verificar qual o tipo de despesa, que nesse caso serão: "Emissão de bilhete aéreo" e PASSAGENS AÉREAS" e assim que for verificando em cada linha (transação) vai somando o valor Líquido para que possamos ter o gasto total. É importante ressaltar que São Paulo fica disparadamente na frente dos outros estados com o gasto nesse tipo de despesa, enquanto DF possui uma quantia gasta muito baixa em relação ao primeiro colocado. Podemos destacar que foi usado também um filtro para que fossem pegos apenas os valores positivos do documento, pois como já foi citado anteriormente, esse valor pode ser negativo se o bilhete for de compensação, o que não nos interessa no estudo dessa pergunta.
+  Para sabermos quais os estados que mais gastam com passagens aéreas, é necessário que possamos verificar qual o tipo de despesa, que nesse caso serão: "Emissão de bilhete aéreo" e PASSAGENS AÉREAS" e assim que for verificando em cada linha (transação) vai somando o valor Líquido para que possamos ter o gasto total. É importante ressaltar que São Paulo fica disparadamente na frente dos outros estados com o gasto nesse tipo de despesa, isso pode acontecer por inúmeros motivos, por exemplo: pode ser o estado que mais possui deputados eleitos, ou apenas priorizam esse tipo de transporte e etc, enquanto DF possui uma quantia gasta muito baixa em relação ao primeiro colocado. Podemos destacar que foi usado também um filtro para que fossem pegos apenas os valores positivos do documento, pois como já foi citado anteriormente, esse valor pode ser negativo se o bilhete for de compensação, o que não nos interessa no estudo dessa pergunta.
   
 ```{r}
 dados%>% 
@@ -177,6 +179,7 @@ dados%>%
   ggplot(aes(x = reorder(tipoDespesa, qtDespesa), y = qtDespesa)) +
   geom_col() + coord_flip() +labs(title = "Despesas mais utilizadas do partipo PSOL", x = "Despesa", y = "quantidade da despesa")
 ```
+  
   Analogamente foi feito para verificarmos qual o tipo de despesa que possui mais gasto por partido, é interessante ressaltarmos que apenas o PMDB não possui "Emissão de bilhete aéreo" liderando os maiores gastos, pois fica na segunda posição. Em relação as outras despesas podemos citar também que no top 10 do PT entra uma tipo de despesa que nos outros não tinha aparecido, que é "Locação ou fretamento de aeronaves". Essa análise foi feita verificando qual o tipo de partido que estava sendo analisado e somando os valores líquidos de suas despesas, fazendo com que assim, pudéssemos ter esses valores separados por variáveis. 
   
 #avaliando através dos valores

@@ -1,0 +1,102 @@
+---
+title: "lab01_CDP_parte2"
+author: "José Glauber"
+date: "6 de setembro de 2018"
+output: html_document
+---
+
+## Importanto os dados e bibliotecas necessárias para as respostas das questões!
+
+```{r setup, include=FALSE}
+library(tidyverse)
+dados <- readr::read_csv("dadosCEAP.csv")
+dados$valorGlosa <- as.numeric(sub(",", ".", dados$valorGlosa, fixed = TRUE))
+```
+## Perguntas 
+
+#lab passado 
+1) Quais são os deputados que gastaram mais dinheiro da CEAP? Quais são os mais econômicos?
+2) Quais os estados cujos deputados gastam mais no exterior? Quais os estados cujos deputados gastam menos no exterior?
+3) Quais os partidos cujos parlamentares mais usam CEAP no estado da Paraíba? Quais são os que menos usam? Mesmas perguntas considerando valores em R$.
+4) Quais os deputados que mais ultrapassam o limite de CEAP do seu estado?
+5) Quais estados cujos parlamentares gastam mais com passagens aéreas?
+6) Escolha três partidos e responda: Quais são os tipos de despesa mais utilizados no uso da CEAP pelos deputados desses partidos? Mesma pergunta considerando valores em R$.
+
+#esse lab
+
+Como na questão 3 do laboratório anterior tinhamos os estados que mais gastaram o dinheiro da CEAP no exterior, é importante verificarmos entre o que mais gastou e o que menos gastou qual o nome do deputado, seu partido e seu respectivo estado.
+
+1) Dentre os estados que mais gastaram com o exterior, quais os nome dos deputados e seu respectivos gastos?
+
+## Estado que menos gastou o dinheiro da CEAP no exterior
+```{r}
+dados%>%
+  group_by(nomeParlamentar, sgUF, sgPartido) %>%
+  filter(tipoDocumento == 2) %>% 
+  filter(sgUF == "MA") %>% 
+  summarise(somaTotal = sum(valorLíquido)) %>% 
+  arrange(-somaTotal) %>% 
+  na.omit() %>% 
+  ggplot(aes(x = reorder(nomeParlamentar, sgPartido), y = somaTotal)) +
+  geom_col() + coord_flip() + labs(title = "Nomes dos deputados e seus respectivos gastos no exterior", x = "Sigla do estado", y = "Soma dos gastos do estado")
+```
+## Estado que mais gastou o dinheiro da CEAP no exterior
+```{r}
+dados%>%
+  filter(tipoDocumento == 2) %>% 
+  filter(sgUF == "SP") %>% 
+  group_by(nomeParlamentar, sgPartido) %>%
+  summarise(somaTotal = sum(valorLíquido)) %>% 
+  arrange(-somaTotal) %>% 
+  ggplot(aes(x = reorder(nomeParlamentar, sgPartido), y = somaTotal)) +
+  geom_col() + coord_flip() + labs(title = "Nomes dos deputados e seus respectivos gastos no exterior", x = "Sigla do estado", y = "Soma dos gastos do estado")
+```
+
+## importando dados necessários para a realização da questão 2
+
+```{r} 
+valoresDosLimites <- readr::read_csv("limiteMensalCEAP.csv")
+names(valoresDosLimites) <- c("sgUF", "limite_mensal")
+novosDados <- merge(dados, valoresDosLimites, by= "sgUF", all = TRUE)
+```
+
+2) Do partido PT qual foi o mês que possui mais gasto dos parlamentares nos anos de 2015, 2016 e 2017?
+
+```{r}
+novosDados%>%
+  mutate(mes = format(dataEmissao, "%m"), ano = format(dataEmissao, "%Y")) %>% 
+  filter(ano == "2015") %>% 
+  group_by(ano, mes) %>%
+  filter(sgPartido == "PT") %>% 
+  summarise(somaTotal = sum(valorLíquido)) %>% 
+  arrange(-somaTotal) %>% 
+  na.omit() %>% 
+  ggplot(aes(x = reorder(mes, ano), y = somaTotal)) +
+  geom_col() + coord_flip() + labs(title = "Valor dos gastos do PT por meses no ano de 2015", x = "Gastos", y = "Meses")  
+```
+
+```{r}
+novosDados%>%
+  mutate(mes = format(dataEmissao, "%m"), ano = format(dataEmissao, "%Y")) %>% 
+  filter(ano == "2016") %>% 
+  group_by(ano, mes) %>%
+  filter(sgPartido == "PT") %>% 
+  summarise(somaTotal = sum(valorLíquido)) %>% 
+  arrange(-somaTotal) %>% 
+  na.omit() %>% 
+  ggplot(aes(x = reorder(mes, ano), y = somaTotal)) +
+  geom_col() + coord_flip() + labs(title = "Valor dos gastos do PT por meses no ano de 2016", x = "Gastos", y = "Meses")  
+```
+
+```{r}
+novosDados%>%
+  mutate(mes = format(dataEmissao, "%m"), ano = format(dataEmissao, "%Y")) %>% 
+  filter(ano == "2017") %>% 
+  group_by(ano, mes) %>%
+  filter(sgPartido == "PT") %>% 
+  summarise(somaTotal = sum(valorLíquido)) %>% 
+  arrange(-somaTotal) %>% 
+  na.omit() %>% 
+  ggplot(aes(x = reorder(mes, ano), y = somaTotal)) +
+  geom_col() + coord_flip() + labs(title = "Valor dos gastos do PT por meses no ano de 2017", x = "Gastos", y = "Meses") 
+```

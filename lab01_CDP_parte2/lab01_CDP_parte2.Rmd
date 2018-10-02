@@ -4,7 +4,21 @@ author: "José Glauber"
 date: "6 de setembro de 2018"
 output: html_document
 ---
-
+OBS: Antes é importante ressaltarmos que, cada linha da tabela de observação representa uma transação que foi realizada por algum parlamentar, a seguir está descrito o que cada variável da tabela representa: 
+  
+  * nomeParlamentar: Nome adotado pelo Parlamentar ao tomar posse do seu mandato.
+  * idCadastro: Número que identifica unicamente um deputado federal na CD.
+  * sgUF: No contexto da cota CEAP, representa a unidade da federação pela qual o deputado foi eleito e é utilizada para definir o valor da cota a que o deputado tem.
+  * sgPartido: Sigla do partido do parlamentar. 
+  * tipoDespesa: O seu conteúdo é a descrição do Tipo de Despesa relativo à despesa em questão.
+  * especDespesa: Representa a descrição  especificação mais detalhada de um referido Tipo de Despesa.
+  * fornecedor: O conteúdo deste dado representa o nome do fornecedor do produto ou serviço presente no documento fiscal
+  * CNPJCPF: O conteúdo deste dado representa o CNPJ ou o CPF do emitente do documento fiscal, quando se tratar do uso da cota em razão do reembolso despesas comprovadas pela emissão de documentos fiscais.
+  * tipoDocumento: Este dado representa o tipo de documento do fiscal – 0 (Zero), para Nota Fiscal; 1 (um), para Recibo; e 2, para Despesa no Exterior.
+  * dataEmissao: O conteúdo deste dado é a data de emissão do documento fiscal ou a data do documento que tenha dado causa à despesa.
+  * valorDocumento: O seu conteúdo é o valor de face do documento fiscal ou o valor do documento que deu causa à despesa. Quando se tratar de bilhete aéreo, esse valor poderá ser negativo, significando que o referido bilhete é um bilhete de compensação, pois compensa um outro bilhete emitido e não utilizado pelo deputado (idem para o dado vlrLiquido abaixo).
+  * valorGlosa: O seu conteúdo representa o valor da glosa do documento fiscal que incidirá sobre o Valor do Documento, ou o valor da glosa do documento que deu causa à despesa.
+  * valorLiquido: O seu conteúdo representa o valor líquido do documento fiscal ou do documento que deu causa à despesa e será calculado pela diferença entre o Valor do Documento e o Valor da Glosa. É este valor que será debitado da cota do deputado. Caso o débito seja do Tipo Telefonia e o valor seja igual a zero, significa que a despesa foi franqueada.
 ## Importanto os dados e bibliotecas necessárias para as respostas das questões!
 
 ```{r setup, include=FALSE}
@@ -12,34 +26,29 @@ library(tidyverse)
 dados <- readr::read_csv("dadosCEAP.csv")
 dados$valorGlosa <- as.numeric(sub(",", ".", dados$valorGlosa, fixed = TRUE))
 ```
-## Perguntas 
+## Perguntas desse lab
 
-#lab passado 
-1) Quais são os deputados que gastaram mais dinheiro da CEAP? Quais são os mais econômicos?
-2) Quais os estados cujos deputados gastam mais no exterior? Quais os estados cujos deputados gastam menos no exterior?
-3) Quais os partidos cujos parlamentares mais usam CEAP no estado da Paraíba? Quais são os que menos usam? Mesmas perguntas considerando valores em R$.
-4) Quais os deputados que mais ultrapassam o limite de CEAP do seu estado?
-5) Quais estados cujos parlamentares gastam mais com passagens aéreas?
-6) Escolha três partidos e responda: Quais são os tipos de despesa mais utilizados no uso da CEAP pelos deputados desses partidos? Mesma pergunta considerando valores em R$.
+Como na questão 3 do laboratório anterior tinhamos os estados que mais gastaram o dinheiro da CEAP no exterior, é importante verificarmos entre o que mais gastou e o que menos gastou qual o nome do deputado e seu partido para saber se existe uma relação com a quantidade de deputados. É esperado que a quantidade de deputados interfira diretamente no valor dos gastos.
 
-#esse lab
+1) Dentre os estados que mais gastaram com o exterior, quais os nomes dos deputados e seu respectivos gastos?
 
-Como na questão 3 do laboratório anterior tinhamos os estados que mais gastaram o dinheiro da CEAP no exterior, é importante verificarmos entre o que mais gastou e o que menos gastou qual o nome do deputado, seu partido e seu respectivo estado.
-
-1) Dentre os estados que mais gastaram com o exterior, quais os nome dos deputados e seu respectivos gastos?
+  Inicialmente, como vimos anteriormente, o estado MA foi o que menos gastou o dinheiro da CEAP com despesas exteriores. O valor é quase mínimo. Se agruparmos pelo nome do parlamentar e pela soma dos seus gastos podemos ter uma análise bem intrigante, pois era muito fácil o valor do MA ser muito baixo, visto que apenas um deputado teve gastos com o exterior, o que já era previsto, pois quanto menos a quantidade de deputados com esse gasto mais provável que o valor seja baixo.
 
 ## Estado que menos gastou o dinheiro da CEAP no exterior
 ```{r}
 dados%>%
-  group_by(nomeParlamentar, sgUF, sgPartido) %>%
+  group_by(nomeParlamentar, sgPartido) %>%
   filter(tipoDocumento == 2) %>% 
-  filter(sgUF == "MA") %>% 
+  filter(sgUF == 'MA') %>% 
   summarise(somaTotal = sum(valorLíquido)) %>% 
   arrange(-somaTotal) %>% 
   na.omit() %>% 
-  ggplot(aes(x = reorder(nomeParlamentar, sgPartido), y = somaTotal)) +
+  ggplot(aes(x = reorder(nomeParlamentar, somaTotal), y = somaTotal)) +
   geom_col() + coord_flip() + labs(title = "Nomes dos deputados e seus respectivos gastos no exterior", x = "Sigla do estado", y = "Soma dos gastos do estado")
 ```
+  Analogamente, temos para o estado de SP que, como vimos anteriormente, tem o maior gastos com o exterior na análise. A partir do gráfico de barras, podemos ver que existem onze deputados que gastaram dessa forma, o que aumentou a quantidade significativa nossa amostra. 
+  Daí concluímos que para esse estudo a quantidade de deputados em determinado estado influenciou para que esse estado tivesse mais gastos no exterior.
+
 ## Estado que mais gastou o dinheiro da CEAP no exterior
 ```{r}
 dados%>%
@@ -48,9 +57,11 @@ dados%>%
   group_by(nomeParlamentar, sgPartido) %>%
   summarise(somaTotal = sum(valorLíquido)) %>% 
   arrange(-somaTotal) %>% 
-  ggplot(aes(x = reorder(nomeParlamentar, sgPartido), y = somaTotal)) +
+  ggplot(aes(x = reorder(nomeParlamentar, somaTotal), y = somaTotal)) +
   geom_col() + coord_flip() + labs(title = "Nomes dos deputados e seus respectivos gastos no exterior", x = "Sigla do estado", y = "Soma dos gastos do estado")
 ```
+
+  Para a segunda pergunta, foi necessário termos a junção novamente das duas tabelas. A ideia principal é analisarmos em quais meses do ano de 2015, 2016 e 2017 o PT teve os seus maiores gastos. 
 
 ## importando dados necessários para a realização da questão 2
 
@@ -61,7 +72,10 @@ novosDados <- merge(dados, valoresDosLimites, by= "sgUF", all = TRUE)
 ```
 
 2) Do partido PT qual foi o mês que possui mais gasto dos parlamentares nos anos de 2015, 2016 e 2017?
-
+  
+  A análise foi feita da seguinte forma: Foram separados os dados por meses e por ano, assim podíamos pegar a quantidade de gastos em determinado mês de determinado ano. É comum que os meses possuam mais gastos relacionados aos últimos meses do ano e aos primeiros, visto que o maior foco é de festas comemorativas e férias.
+  A partir do primeiro gráfico relacionado ao ano de 2015, podemos ver que o mês que mais possuiu gastos foi o mês de dezembro, ficando com uma vantagem consideravél em relação a alguns meses, como por exemplo, fevereiro. O mês de novembro e de janeiro tiveram também gastos consideráveis. Com relação ao ano de 2016 temos que os últimos meses do ano são também os que os deputados mais gastam, possuindo apenas uma diferença em relação ao ano de 2016 pois janeiro foi um dos meses com o menor gasto em 2016. Já analisando o ano de 2017 temos algo bastante interessante a ser destacado. Os três últimos meses não são visualizados no gráfico, pois o PT não posuiu nenhum gasto nos referentes, o que nos leva a concluir que nem sempre os maiores gastos estão nos últimos meses e no primeiro, pois varia conforme o ano.
+  
 ```{r}
 novosDados%>%
   mutate(mes = format(dataEmissao, "%m"), ano = format(dataEmissao, "%Y")) %>% 
@@ -71,7 +85,7 @@ novosDados%>%
   summarise(somaTotal = sum(valorLíquido)) %>% 
   arrange(-somaTotal) %>% 
   na.omit() %>% 
-  ggplot(aes(x = reorder(mes, ano), y = somaTotal)) +
+  ggplot(aes(x = reorder(mes, somaTotal), y = somaTotal)) +
   geom_col() + coord_flip() + labs(title = "Valor dos gastos do PT por meses no ano de 2015", x = "Gastos", y = "Meses")  
 ```
 
@@ -84,7 +98,7 @@ novosDados%>%
   summarise(somaTotal = sum(valorLíquido)) %>% 
   arrange(-somaTotal) %>% 
   na.omit() %>% 
-  ggplot(aes(x = reorder(mes, ano), y = somaTotal)) +
+  ggplot(aes(x = reorder(mes, somaTotal), y = somaTotal)) +
   geom_col() + coord_flip() + labs(title = "Valor dos gastos do PT por meses no ano de 2016", x = "Gastos", y = "Meses")  
 ```
 
@@ -97,6 +111,6 @@ novosDados%>%
   summarise(somaTotal = sum(valorLíquido)) %>% 
   arrange(-somaTotal) %>% 
   na.omit() %>% 
-  ggplot(aes(x = reorder(mes, ano), y = somaTotal)) +
+  ggplot(aes(x = reorder(mes, somaTotal), y = somaTotal)) +
   geom_col() + coord_flip() + labs(title = "Valor dos gastos do PT por meses no ano de 2017", x = "Gastos", y = "Meses") 
 ```

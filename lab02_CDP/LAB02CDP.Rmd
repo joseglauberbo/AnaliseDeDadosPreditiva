@@ -8,8 +8,29 @@ output: html_document
 ## Importanto os dados e bibliotecas necessárias para as respostas das questões!
 ```{r}
 library(tidyverse)
-eleicoes_data <- readr::read_csv(
-  here::here('eleicoes_2006_e_2010.csv'), 
+eleicoes_data_2006 <- readr::read_csv(
+  here::here('/lab02_CDP/eleicoes_2006.csv'), 
+  local=readr::locale("br"),
+  col_types = cols(
+    ano = col_integer(),
+    sequencial_candidato = col_character(),
+    quantidade_doacoes = col_integer(),
+    quantidade_doadores = col_integer(),
+    total_receita = col_double(),
+    media_receita = col_double(),
+    recursos_de_outros_candidatos.comites = col_double(),
+    recursos_de_pessoas_fisicas = col_double(),
+    recursos_de_pessoas_juridicas = col_double(),
+    recursos_proprios = col_double(),
+    `recursos_de_partido_politico` = col_double(),
+    quantidade_despesas = col_integer(),
+    quantidade_fornecedores = col_integer(),
+    total_despesa = col_double(),
+    media_despesa = col_double(),
+    votos = col_integer(),
+    .default = col_character()))
+eleicoes_data_2010 <- readr::read_csv(
+  here::here('/lab02_CDP/eleicoes_2010.csv'), 
   local=readr::locale("br"),
   col_types = cols(
     ano = col_integer(),
@@ -61,8 +82,13 @@ OBS: Descrição dos dados a serem trabalhados:
 
 1) Um modelo de regressão múltipla com todas as variáveis é plausível para explicar a variação em y (número de votos) em 2006? Mesma pergunta para 2010.
 
-```{r}
+  Podemos perceber, através da descrição dos dados, que algumas variáveis não influenciam na variável de saída (número de votos), essas são: nome, sequencial_candidato, e cargo. Essa última não influencia no modelo, pois ela é a mesma para todas as nossas observações, ou seja, deputado federal. Iremos desconsiderar também setor_economico_despesa e setor_economica_receita pois essas irão atrapalhar nossa leitura e interpretação do estudo. Iremos criar um modelo de regressão linear sem essas vaiáveis para demonstrar.
 
+```{r}
+dadosEleicoesFiltrados <- eleicoes_data_2006 %>% 
+    select(-nome, -sequencial_candidato, -cargo, -ano)
+modelo <- lm(votos ~ ., dadosEleicoesFiltrados)
+modelo %>% summary()
 ```
 
 2) Compare as regressões construídas para 2006 e 2010. Quais as diferenças/semelhanças percebidas? Algumas sugestões:

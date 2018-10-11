@@ -10,7 +10,7 @@ output: html_document
 library(tidyverse)
 
 eleicoes_data_2006 <- readr::read_csv(
-  here::here('/lab02_CDP/eleicoes_2006.csv'), 
+  here::here('lab02_CDP/eleicoes_2006.csv'), 
   local=readr::locale("br"),
   col_types = cols(
     ano = col_integer(),
@@ -155,9 +155,7 @@ ggplot(model_eleicoes_2010, aes(x = predict(model_eleicoes_2010), y = residuals(
 
 3) Todas as variáveis são úteis para os modelos de regressão? Há variáveis redudantes? Faça análises para 2006 e 2010 separadamente. 
 
-```{r}
-
-```
+  Não. Nem todas as variáveis são úteis para os modelos de regressão. Como já foi dito anteriormente, algumas variáveis possuem apenas 1 nível, ou seja, possuem um mesmo valor para as inúmeras observações na tabela, como é o caso de cargo, que sempre será DEPUTADO FEDERAL. É interessante destacarmos que na primeira questão, foi-se necessário retirar algumas variáveis que não interferiam no modelo, para que esse pudesse ao menos ser rodado e analisado. Já na segunda questão, foi observado valores que interferem no nosso modelo em duas proporções: muito ou pouco. Nisso percebemos que: existem variáveis no nosso modelo que são úteis mas que em menor proporções do que outras e se fossem retiradas talvez não prejudicasse tanto o nosso modelo para a variável de resposta y (votos). Existem algumas variáveis redundantes, pois a sua existência na tabela só existe por causa de outra, como total_despesa e media_despesa. É importante ressaltar que, nos modelos de 2006 e de 2010, existem variáveis como: recursos_de_partido_politico que possuem valores zero na tabela, o que faz com que essa variável seja considerada não tão importante para o nosso modelo. 
 
 4) No caso de haver variáveis pouco explicativas e/ou redudantes, construa um novo modelo sem essas variáveis e o compare ao modelo com todas as variáveis (e.g. em termos de R2 e RSE). Faça isso para 2006 e 2010 separadamente.  
 

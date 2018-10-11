@@ -53,6 +53,28 @@ eleicoes_data_2010 <- readr::read_csv(
     media_despesa = col_double(),
     votos = col_integer(),
     .default = col_character()))
+
+eleicoes_data_2006_2010 <- readr::read_csv(
+  here::here('/lab02_CDP/eleicoes_2006_e_2010.csv'), 
+  local=readr::locale("br"),
+  col_types = cols(
+    ano = col_integer(),
+    sequencial_candidato = col_character(),
+    quantidade_doacoes = col_integer(),
+    quantidade_doadores = col_integer(),
+    total_receita = col_double(),
+    media_receita = col_double(),
+    recursos_de_outros_candidatos.comites = col_double(),
+    recursos_de_pessoas_fisicas = col_double(),
+    recursos_de_pessoas_juridicas = col_double(),
+    recursos_proprios = col_double(),
+    `recursos_de_partido_politico` = col_double(),
+    quantidade_despesas = col_integer(),
+    quantidade_fornecedores = col_integer(),
+    total_despesa = col_double(),
+    media_despesa = col_double(),
+    votos = col_integer(),
+    .default = col_character()))
 ```
 
 OBS: Descrição dos dados a serem trabalhados:
@@ -81,13 +103,9 @@ OBS: Descrição dos dados a serem trabalhados:
   * "estado_civil": (character)
   * "ocupacao": (character) ocupação do candidato
 
-## Perguntas
+  Para iniciarmos, podemos verificar que: algumas variáveis são qualitativas e outra são quantitativas, ou seja, temos que transformar as que são quantitativas (categóricas) em fatores, para que possamos verificar como se comporta o modelo. Iremos fazer isso para as duas tabelas, a de 2010 e a de 2016. Foi escolhido trabalhar com elas separadamente, para não ser necessário aplicar o filter. Segue abaixo a transformação:
 
-1) Um modelo de regressão múltipla com todas as variáveis é plausível para explicar a variação em y (número de votos) em 2006? Mesma pergunta para 2010.
-
-  Para iniciarmos, podemos verificar que: algumas variáveis são qualitativas e outra são quantitativas, ou seja, temos que transformar as que são quantitativas (categóricas) em fatores, para que possamos verificar como se comporta o modelo. Iremos fazer isso para as duas tabelas, a de 2010 e a de 2016. Foi escolhido trabalhar com elas separadamente, para não ser necessário aplicar o filter. Segue abaixo a transformação: 
-  
-```{r}
+``` {r}
 eleicoes_data_2006$uf <- as.factor(eleicoes_data_2006$uf)
 eleicoes_data_2006$partido <- as.factor(eleicoes_data_2006$partido)
 eleicoes_data_2006$cargo <- as.factor(eleicoes_data_2006$cargo)
@@ -103,6 +121,24 @@ eleicoes_data_2010$sexo <- as.factor(eleicoes_data_2010$sexo)
 eleicoes_data_2010$grau <- as.factor(eleicoes_data_2010$grau)
 eleicoes_data_2010$estado_civil <- as.factor(eleicoes_data_2010$estado_civil)
 eleicoes_data_2010$ocupacao <- as.factor(eleicoes_data_2010$ocupacao)
+
+eleicoes_data_2006_2010$uf <- as.factor(eleicoes_data_2006_2010$uf)
+eleicoes_data_2006_2010$partido <- as.factor(eleicoes_data_2006_2010$partido)
+eleicoes_data_2006_2010$cargo <- as.factor(eleicoes_data_2006_2010$cargo)
+eleicoes_data_2006_2010$sexo <- as.factor(eleicoes_data_2006_2010$sexo)
+eleicoes_data_2006_2010$grau <- as.factor(eleicoes_data_2006_2010$grau)
+eleicoes_data_2006_2010$estado_civil <- as.factor(eleicoes_data_2006_2010$estado_civil)
+eleicoes_data_2006_2010$ocupacao <- as.factor(eleicoes_data_2006_2010$ocupacao)
+
+```
+
+## Perguntas
+
+1) Um modelo de regressão múltipla com todas as variáveis é plausível para explicar a variação em y (número de votos) em 2006? Mesma pergunta para 2010.
+
+ Criando os modelos de regressões:
+  
+```{r}
 
 model_eleicoes_2006 <- lm(formula = votos ~ ., eleicoes_data_2006 %>% select(-ano, -cargo, -sequencial_candidato, -nome), na.action = na.omit)
 model_eleicoes_2006 %>% summary()
@@ -195,6 +231,18 @@ ggplot(model_eleicoes_2010, aes(x = predict(model_eleicoes_2010), y = residuals(
 
 5) Construa agora uma regressão considerando os anos 2006 e 2010 em conjunto. Que diferenças/semelhanças você percebe em relação aos modelos individuais por ano? Veja a questão 2 para sugestões que você usar para comparação.
 
+  5.1) Podemos analisar que: o modelo possuem os resíduos mais aglomerados perto do zero, porém esse modelo possue dispersões também. O fato de possuir resíduos mais aglomerados perto de zero indica que o modelo não superestima ou subestima os valores das variáveis. O que é bem próximo ao que encontramos na avaliação de cada ano separadamente.
+  
 ```{r}
+model_eleicoes_data_2006_2010 <- lm(formula = votos ~ ., eleicoes_data_2006_2010 %>% select(-ano, -cargo, -sequencial_candidato, -nome), na.action = na.omit)
 
+ggplot(model_eleicoes_data_2006_2010, aes(x = predict(model_eleicoes_data_2006_2010), y = residuals(model_eleicoes_data_2006_2010))) + geom_point()
+```
+
+  5.2) Os valores de R2 e RSE, são respectivamente: 0.5056 e 0.4883, o que representa, como já dito anteriormente, que as variáveis escolhidas são importantes para o nosso modelo, pois os valores de R2 e RSE são muito próximos. É importante destacar que: as variáveis poucos significativas ou redundante são as mesmas das tabelas exclusivas de cada ano. 
+  
+```{r}
+model_eleicoes_data_2006_2010 <- lm(formula = votos ~ ., eleicoes_data_2006_2010 %>% select(-ano, -cargo, -sequencial_candidato, -nome), na.action = na.omit)
+
+model_eleicoes_data_2006_2010 %>% summary()
 ```

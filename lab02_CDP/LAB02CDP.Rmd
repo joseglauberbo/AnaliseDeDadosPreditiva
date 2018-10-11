@@ -8,6 +8,7 @@ output: html_document
 ## Importanto os dados e bibliotecas necessárias para as respostas das questões!
 ```{r}
 library(tidyverse)
+
 eleicoes_data_2006 <- readr::read_csv(
   here::here('/lab02_CDP/eleicoes_2006.csv'), 
   local=readr::locale("br"),
@@ -29,6 +30,8 @@ eleicoes_data_2006 <- readr::read_csv(
     media_despesa = col_double(),
     votos = col_integer(),
     .default = col_character()))
+
+
 eleicoes_data_2010 <- readr::read_csv(
   here::here('/lab02_CDP/eleicoes_2010.csv'), 
   local=readr::locale("br"),
@@ -82,14 +85,44 @@ OBS: Descrição dos dados a serem trabalhados:
 
 1) Um modelo de regressão múltipla com todas as variáveis é plausível para explicar a variação em y (número de votos) em 2006? Mesma pergunta para 2010.
 
-  Podemos perceber, através da descrição dos dados, que algumas variáveis não influenciam na variável de saída (número de votos), essas são: nome, sequencial_candidato, e cargo. Essa última não influencia no modelo, pois ela é a mesma para todas as nossas observações, ou seja, deputado federal. Iremos desconsiderar também setor_economico_despesa e setor_economica_receita pois essas irão atrapalhar nossa leitura e interpretação do estudo. Iremos criar um modelo de regressão linear sem essas vaiáveis para demonstrar.
-
+  Para iniciarmos, podemos verificar que: algumas variáveis são qualitativas e outra são quantitativas, ou seja, temos que transformar as que são quantitativas (categóricas) em fatores, para que possamos verificar como se comporta o modelo. Iremos fazer isso para as duas tabelas, a de 2010 e a de 2016. Foi escolhido trabalhar com elas separadamente, para não ser necessário aplicar o filter. Segue abaixo a transformação: 
+  
 ```{r}
-dadosEleicoesFiltrados <- eleicoes_data_2006 %>% 
-    select(-nome, -sequencial_candidato, -cargo, -ano)
-modelo <- lm(votos ~ ., dadosEleicoesFiltrados)
-modelo %>% summary()
+eleicoes_data_2006$uf <- as.factor(eleicoes_data_2006$uf)
+eleicoes_data_2006$partido <- as.factor(eleicoes_data_2006$partido)
+eleicoes_data_2006$cargo <- as.factor(eleicoes_data_2006$cargo)
+eleicoes_data_2006$sexo <- as.factor(eleicoes_data_2006$sexo)
+eleicoes_data_2006$grau <- as.factor(eleicoes_data_2006$grau)
+eleicoes_data_2006$estado_civil <- as.factor(eleicoes_data_2006$estado_civil)
+eleicoes_data_2006$ocupacao <- as.factor(eleicoes_data_2006$ocupacao)
+
+eleicoes_data_2010$uf <- as.factor(eleicoes_data_2010$uf)
+eleicoes_data_2010$partido <- as.factor(eleicoes_data_2010$partido)
+eleicoes_data_2010$cargo <- as.factor(eleicoes_data_2010$cargo)
+eleicoes_data_2010$sexo <- as.factor(eleicoes_data_2010$sexo)
+eleicoes_data_2010$grau <- as.factor(eleicoes_data_2010$grau)
+eleicoes_data_2010$estado_civil <- as.factor(eleicoes_data_2010$estado_civil)
+eleicoes_data_2010$ocupacao <- as.factor(eleicoes_data_2010$ocupacao)
+
+model_eleicoes_2006 <- lm(formula = votos ~ ., eleicoes_data_2006 %>% select(-ano, -cargo, -sequencial_candidato, -nome), na.action = na.omit)
+model_eleicoes_2006 %>% summary()
+
+
+model_eleicoes_2010 <- lm(formula = votos ~ ., eleicoes_data_2010 %>% select(-ano, -cargo, -sequencial_candidato, -nome), na.action = na.omit)
+model_eleicoes_2010 %>% summary()
+
 ```
+
+  Todas as varíaveis não são plausíveis para construção do modelo. Mas porque?
+  
+    - De cara podemos excluir ano e cargo, pois elas possuem o mesmo valor para todas as observações da tabela (são de um nível), ou seja, elas não irão interferir no modelo na variável de saída.
+    - Podemos verificar ao rodar o modelo, que mesmo separando ele por ano e tendo menos observações na tabela, ele demora muito tempo, pois são muitas variáveis incluídas para se ter um resultado na variável de resposta, ou seja, é inviável devido a quantidade de memória que é alocada para a construção do modelo.
+    - As variáveis nome e sequencial_candidato também não são consideradas importantes para nosso modelo, pois essas servem apenas para identificação de candidatos, não para trazer alguma informação. 
+
+  Tirando essas variáveis citadas acima e fazendo o novo modelo para cada um delas, podemos verificar que:
+  
+    - O modelo conseguiu ser criado e com isso podemos verificar que: o Multiple R-squared e o Adjusted R-squared tem valor de 0.5779 e 0.5488, respectivamente, para as eleições de 2006 e 0.5405 e 0.5129, respectivamente para as eleições de 2010 , o que nos traz valores muito próximos, fazendo com que possamos identificar que as variáveis que sobraram no modelo são boas para identificação deste.
+
 
 2) Compare as regressões construídas para 2006 e 2010. Quais as diferenças/semelhanças percebidas? Algumas sugestões:
 

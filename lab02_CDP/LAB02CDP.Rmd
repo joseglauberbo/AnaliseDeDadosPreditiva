@@ -127,13 +127,37 @@ model_eleicoes_2010 %>% summary()
 2) Compare as regressões construídas para 2006 e 2010. Quais as diferenças/semelhanças percebidas? Algumas sugestões:
 
     * Analise os plots de resíduos e verifique se há tendências nos erros para cada ano.
+    
+  Inicialmente iremos verificar para o modelo das eleições de 2006:
+```{r}
+model_eleicoes_2006 <- lm(formula = votos ~ ., eleicoes_data_2006 %>% select(-ano, -cargo, -sequencial_candidato, -nome), na.action = na.omit)
+
+ggplot(model_eleicoes_2006, aes(x = predict(model_eleicoes_2006), y = residuals(model_eleicoes_2006))) + geom_point()
+```
+  Logo em seguida iremos verificar para o modelo das eleições de 2010:
+  
+```{r}
+model_eleicoes_2010 <- lm(formula = votos ~ ., eleicoes_data_2010 %>% select(-ano, -cargo, -sequencial_candidato, -nome), na.action = na.omit)
+
+ggplot(model_eleicoes_2010, aes(x = predict(model_eleicoes_2010), y = residuals(model_eleicoes_2010))) + geom_point()
+```
+  Daí podemos analisar que: os dois modelos possuem os resíduos mais aglomerados perto do zero, porém os dois modelos possuem dispersões também, sendo o de 2010 mais homogêneo e com menos disperções.
+
     * Quais variáveis conseguem explicar melhor o número de votos? Compare essas variáveis entre os modelos. Mesma coisa para as variáveis menos explicativas.
+    
+  Em uma campanha, um número maior de fornecedores sugere que mais dinheiro foi aplicado aquela campanha, então podemos classificar que essa varíavel é bastante explicativa para o número de votos. A variável total_despesa é complementativa ao número de fornecedores, então elas duas são bastantes explicativas para o nosso modelo. 
+
+```{r}
+model_eleicoes_2006 <- lm(formula = votos ~ ., eleicoes_data_2006 %>% select(-ano, -cargo, -sequencial_candidato, -nome, -votos), na.action = na.omit)
+
+ggplot(model_eleicoes_2006, aes(x = predict(model_eleicoes_2006), y = residuals(model_eleicoes_2006))) + geom_point()
+```
+
+  
     * Compare os valores de R2 e RSE considerando as regressões para cada ano.
     * Inclua outros pontos de comparação que você ache interessante.
 
-```{r}
 
-```
 
 3) Todas as variáveis são úteis para os modelos de regressão? Há variáveis redudantes? Faça análises para 2006 e 2010 separadamente. 
 

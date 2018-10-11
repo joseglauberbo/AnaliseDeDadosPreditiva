@@ -159,8 +159,38 @@ ggplot(model_eleicoes_2010, aes(x = predict(model_eleicoes_2010), y = residuals(
 
 4) No caso de haver variáveis pouco explicativas e/ou redudantes, construa um novo modelo sem essas variáveis e o compare ao modelo com todas as variáveis (e.g. em termos de R2 e RSE). Faça isso para 2006 e 2010 separadamente.  
 
-```{r}
+  Criaremos um modelo para esse ano tirando as variáveis que foram consideradas pouco explicativas e/ou redudantes na questão 2 e 3 e compararemos com o modelo que foi criado na primeira questão (vale ressaltar que algumas variáveis também estão fora dele, mas isso era necessário pois além de serem irrelevantes, o modelo com todas as variáveis não rodava no computador).
 
+  Inicialmente, iremos fazer isso para o ano de 2006. 
+  
+```{r}
+model_eleicoes_2006 <- lm(formula = votos ~ ., eleicoes_data_2006 %>% select(-ano, -cargo, -sequencial_candidato, -nome, -quantidade_doadores, -total_receita, -media_receita, -recursos_de_outros_candidatos.comites, -recursos_de_pessoas_fisicas, -recursos_de_pessoas_juridicas, -recursos_proprios, -recursos_de_partido_politico, -quantidade_despesas, -quantidade_fornecedores, -total_despesa, -media_despesa ), na.action = na.omit)
+
+model_eleicoes_2006 %>% summary()
+```
+  
+  Podemos observar os valores de R2 e RSE são respectivamente 0.4204 e 0.3827, ou seja, mesmo tirando as variáveis que inicialmente eram consideradas redudantes ou pouco explicativas, a nossa diferença entre esses valores é bastante pequena, o que explica que nossas outras variáveis são realmente consideradas boas para o modelo. Podemos também observar uma semelhança se observamos os resíduos, ou seja, é quase o mesmo do analisado no primeiro modelo com as variáveis redudantes ou pouco explicativas. Segue abaixo:
+  
+```{r}
+model_eleicoes_2006 <- lm(formula = votos ~ ., eleicoes_data_2006 %>% select(-ano, -cargo, -sequencial_candidato, -nome, -quantidade_doadores, -total_receita, -media_receita, -recursos_de_outros_candidatos.comites, -recursos_de_pessoas_fisicas, -recursos_de_pessoas_juridicas, -recursos_proprios, -recursos_de_partido_politico, -quantidade_despesas, -quantidade_fornecedores, -total_despesa, -media_despesa ), na.action = na.omit)
+
+ggplot(model_eleicoes_2006, aes(x = predict(model_eleicoes_2006), y = residuals(model_eleicoes_2006))) + geom_point()
+```
+  
+  Agora para o ano de 2010:
+
+```{r}
+model_eleicoes_2010 <- lm(formula = votos ~ ., eleicoes_data_2010 %>% select(-ano, -cargo, -sequencial_candidato, -nome, -quantidade_doadores, -total_receita, -media_receita, -recursos_de_outros_candidatos.comites, -recursos_de_pessoas_fisicas, -recursos_de_pessoas_juridicas, -recursos_proprios, -recursos_de_partido_politico, -quantidade_despesas, -quantidade_fornecedores, -total_despesa, -media_despesa ), na.action = na.omit)
+
+model_eleicoes_2010 %>% summary()
+```
+
+  Podemos observar os valores de R2 e RSE são respectivamente 0.39 e 0.3554, ou seja, mesmo tirando as variáveis que inicialmente eram consideradas redudantes ou pouco explicativas, a nossa diferença entre esses valores é bastante pequena, o que explica que nossas outras variáveis são realmente consideradas boas para o modelo. Nesse caso, podemos observar que não ocorreu uma semelhança ao observamos os resíduos, ou seja, ele difere um pouco do analisado no primeiro modelo com as variáveis redudantes ou pouco explicativas, porém ainda é parecido. Segue abaixo:
+  
+```{r}
+model_eleicoes_2010 <- lm(formula = votos ~ ., eleicoes_data_2010 %>% select(-ano, -cargo, -sequencial_candidato, -nome, -quantidade_doadores, -total_receita, -media_receita, -recursos_de_outros_candidatos.comites, -recursos_de_pessoas_fisicas, -recursos_de_pessoas_juridicas, -recursos_proprios, -recursos_de_partido_politico, -quantidade_despesas, -quantidade_fornecedores, -total_despesa, -media_despesa ), na.action = na.omit)
+
+ggplot(model_eleicoes_2010, aes(x = predict(model_eleicoes_2010), y = residuals(model_eleicoes_2010))) + geom_point()
 ```
 
 5) Construa agora uma regressão considerando os anos 2006 e 2010 em conjunto. Que diferenças/semelhanças você percebe em relação aos modelos individuais por ano? Veja a questão 2 para sugestões que você usar para comparação.

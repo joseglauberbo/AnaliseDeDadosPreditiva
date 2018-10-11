@@ -123,17 +123,18 @@ model_eleicoes_2010 %>% summary()
   
     - O modelo conseguiu ser criado e com isso podemos verificar que: o Multiple R-squared e o Adjusted R-squared tem valor de 0.5779 e 0.5488, respectivamente, para as eleições de 2006 e 0.5405 e 0.5129, respectivamente para as eleições de 2010 , o que nos traz valores muito próximos, fazendo com que possamos identificar que as variáveis que sobraram no modelo são boas para identificação deste.
 
-
 2) Compare as regressões construídas para 2006 e 2010. Quais as diferenças/semelhanças percebidas? Algumas sugestões:
 
-    * Analise os plots de resíduos e verifique se há tendências nos erros para cada ano.
+  2.1) Analise os plots de resíduos e verifique se há tendências nos erros para cada ano.
     
   Inicialmente iremos verificar para o modelo das eleições de 2006:
+  
 ```{r}
 model_eleicoes_2006 <- lm(formula = votos ~ ., eleicoes_data_2006 %>% select(-ano, -cargo, -sequencial_candidato, -nome), na.action = na.omit)
 
 ggplot(model_eleicoes_2006, aes(x = predict(model_eleicoes_2006), y = residuals(model_eleicoes_2006))) + geom_point()
 ```
+  
   Logo em seguida iremos verificar para o modelo das eleições de 2010:
   
 ```{r}
@@ -141,23 +142,16 @@ model_eleicoes_2010 <- lm(formula = votos ~ ., eleicoes_data_2010 %>% select(-an
 
 ggplot(model_eleicoes_2010, aes(x = predict(model_eleicoes_2010), y = residuals(model_eleicoes_2010))) + geom_point()
 ```
-  Daí podemos analisar que: os dois modelos possuem os resíduos mais aglomerados perto do zero, porém os dois modelos possuem dispersões também, sendo o de 2010 mais homogêneo e com menos disperções.
-
-    * Quais variáveis conseguem explicar melhor o número de votos? Compare essas variáveis entre os modelos. Mesma coisa para as variáveis menos explicativas.
-    
-  Em uma campanha, um número maior de fornecedores sugere que mais dinheiro foi aplicado aquela campanha, então podemos classificar que essa varíavel é bastante explicativa para o número de votos. A variável total_despesa é complementativa ao número de fornecedores, então elas duas são bastantes explicativas para o nosso modelo. 
-
-```{r}
-model_eleicoes_2006 <- lm(formula = votos ~ ., eleicoes_data_2006 %>% select(-ano, -cargo, -sequencial_candidato, -nome, -votos), na.action = na.omit)
-
-ggplot(model_eleicoes_2006, aes(x = predict(model_eleicoes_2006), y = residuals(model_eleicoes_2006))) + geom_point()
-```
-
   
-    * Compare os valores de R2 e RSE considerando as regressões para cada ano.
-    * Inclua outros pontos de comparação que você ache interessante.
+  Daí podemos analisar que: os dois modelos possuem os resíduos mais aglomerados perto do zero, porém esses modelos possuem dispersões também, sendo o de 2010 mais homogêneo e com menos disperções. O fato de possuir resíduos mais aglomerados perto de zero indica que o modelo não superestima ou subestima os valores das variáveis.
 
+  2.2) Quais variáveis conseguem explicar melhor o número de votos? Compare essas variáveis entre os modelos. Mesma coisa para as variáveis menos explicativas.
+  
+  O p-valor é um indicador que nos mostra se a variável em análise e a de saída tem relação, ou seja, se esses valores forem baixos indicam que essas variáveis não possuem uma boa correlação. Analisando o modelo de regressão, podemos observar que as variáveis quantidade_doadores, total_receita, media_receita, recursos_de_outros_candidatos.comites, recursos_de_pessoas_fisicas, recursos_de_pessoas_juridicas, recursos_proprios, recursos_de_partido_politico, quantidade_despesas, quantidade_fornecedores, total_despesa e media_despesa possuem valor de p muito baixo, já as que sobraram que indicam um maior p-valor mostram que essas são melhores para explicar o número de votos.
 
+  2.3) Compare os valores de R2 e RSE considerando as regressões para cada ano.
+    
+  Os valores do R2 e RSE para o modelo de 2006 e para o modelo de 2010 já foram comparados na primeira questão e esses não diferem muito. A partir daí podemos observar que as variáveis que estão sendo levadas em consideração para a construção do nosso modelo na variável de resposta y (votos) são consideradas indicadas, pois não vemos muita diferenciação entre o R2 e o RSE.
 
 3) Todas as variáveis são úteis para os modelos de regressão? Há variáveis redudantes? Faça análises para 2006 e 2010 separadamente. 
 

@@ -3,6 +3,8 @@ title: "Lab_02_CDP"
 author: "José Glauber"
 date: "1 de outubro de 2018"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Importanto os dados e bibliotecas necessárias para as respostas das questões!

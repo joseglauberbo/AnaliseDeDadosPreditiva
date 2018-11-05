@@ -6,115 +6,60 @@ output: html_document
 ---
 
 ## Importanto os dados e bibliotecas necessárias para as respostas das questões!
-```{r}
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 library(tidyverse)
-
-eleicoes_data_2006 <- readr::read_csv(
-  here::here('lab03_CDP/eleicoes_2006.csv'), 
-  local=readr::locale("br"),
-  col_types = cols(
-    ano = col_integer(),
-    sequencial_candidato = col_character(),
-    quantidade_doacoes = col_integer(),
-    quantidade_doadores = col_integer(),
-    total_receita = col_double(),
-    media_receita = col_double(),
-    recursos_de_outros_candidatos.comites = col_double(),
-    recursos_de_pessoas_fisicas = col_double(),
-    recursos_de_pessoas_juridicas = col_double(),
-    recursos_proprios = col_double(),
-    `recursos_de_partido_politico` = col_double(),
-    quantidade_despesas = col_integer(),
-    quantidade_fornecedores = col_integer(),
-    total_despesa = col_double(),
-    media_despesa = col_double(),
-    votos = col_integer(),
-    .default = col_character()))
-
-
-eleicoes_data_2010 <- readr::read_csv(
-  here::here('/lab03_CDP/eleicoes_2010.csv'), 
-  local=readr::locale("br"),
-  col_types = cols(
-    ano = col_integer(),
-    sequencial_candidato = col_character(),
-    quantidade_doacoes = col_integer(),
-    quantidade_doadores = col_integer(),
-    total_receita = col_double(),
-    media_receita = col_double(),
-    recursos_de_outros_candidatos.comites = col_double(),
-    recursos_de_pessoas_fisicas = col_double(),
-    recursos_de_pessoas_juridicas = col_double(),
-    recursos_proprios = col_double(),
-    `recursos_de_partido_politico` = col_double(),
-    quantidade_despesas = col_integer(),
-    quantidade_fornecedores = col_integer(),
-    total_despesa = col_double(),
-    media_despesa = col_double(),
-    votos = col_integer(),
-    .default = col_character()))
-
-eleicoes_data_2006_2010 <- readr::read_csv(
-  here::here('/lab03_CDP/eleicoes_2006_e_2010.csv'), 
-  local=readr::locale("br"),
-  col_types = cols(
-    ano = col_integer(),
-    sequencial_candidato = col_character(),
-    quantidade_doacoes = col_integer(),
-    quantidade_doadores = col_integer(),
-    total_receita = col_double(),
-    media_receita = col_double(),
-    recursos_de_outros_candidatos.comites = col_double(),
-    recursos_de_pessoas_fisicas = col_double(),
-    recursos_de_pessoas_juridicas = col_double(),
-    recursos_proprios = col_double(),
-    `recursos_de_partido_politico` = col_double(),
-    quantidade_despesas = col_integer(),
-    quantidade_fornecedores = col_integer(),
-    total_despesa = col_double(),
-    media_despesa = col_double(),
-    votos = col_integer(),
-    .default = col_character()))
-
+library(readr)
+library(caret)
+library(dplyr)
+library(ggplot2)
 ```
 
-OBS: Descrição dos dados a serem trabalhados:
+# Carregando informações
 
-  * "sequencial_candidato" :(character) id do candidato
-  * "nome": (character)
-  * "uf": (character)
-  * "partido": (character)
-  * "quantidade_doacoes": (integer)
-  * "quantidade_doadores": (integer) número de doadores diferentes
-  * "total_receita": (double) soma em R$ das doações
-  * "media_receita": (double) média das doações
-  * "recursos_de_outros_candidatos/comites": (double) quantia em R$ das doações provenientes de outros candidatos ou comite partidário
-  * "recursos_de_pessoas_fisicas": (double) quantia em R$ das doações provenientes de outros CPFs
-  * "recursos_de_pessoas_juridicas": (double) quantia em R$ das doações provenientes de outros CNPJ
-  * "recursos_proprios": (double) quantia em R$ das doações provenientes do próprio candidato
-  * "recursos_de_partido_politico": (double) quantia em R$ das doações provenientes do partido político do candidato
-  * "votos": (integer) variável alvo. Se refere ao número de votos na campanha de 2006 e 2010
-  * "quantidade_despesas": (integer)
-  * "quantidade_fornecedores": (integer) número de fornecedores/despesas diferentes
-  * "total_despesa": (double) soma em R$ das despesas de campanha
-  * "media_despesa": (double) média das despesas de campanha
-  * "cargo": (character)
-  * "Sexo":  (character)
-  * "grau": (character) grau de instrução do candidato
-  * "estado_civil": (character)
-  * "ocupacao": (character) ocupação do candidato
+```{r}
+train_set <- read.csv("train.csv", encoding = "latin1")
+train <- train_set %>% select(-cargo, -nome, -sequencial_candidato)
 
+test_set <- read.csv("test.csv", encoding = "latin1")
+test <- test_set %>% select(-cargo, -nome, -sequencial_candidato)
+```
+  
+## Perguntas
 
-## R Markdown
+1) Usando todas as variáveis disponíveis, tune (usando validação cruzada): (i) um modelo de regressão Ridge, (ii) um modelo de regressão Lasso e (iii) um modelo KNN. Para os modelos de regressão linear, o parâmetro a ser tunado é o lambda (penalização dos coeficientes) e o KNN o número de vizinhos.
 
+i) modelo de regressão Ridge
+
+```{r}
+train_control <- trainControl(method = "cv",
+                           number = 5)
+
+preProcValues <- c("center", "scale", "nzv")
+
+model.ridge <- train(votos ~ ., 
+               data = train,
+               trControl = train_control,
+               method = "ridge",
+               preProcess = preProcValues,
+               tuneLength = 15)
+model.ridge
+```
+
+2) Compare os três modelos em termos do erro RMSE de validação cruzada.
+
+```{r}
+
+```
+3) Quais as variáveis mais importantes segundo o modelo de regressão Ridge e Lasso?  Variáveis foram descartadas pelo Lasso? Quais?
 
 ```{r}
 
 ```
 
-## Including Plots
+4) Re-treine o melhor modelo (usando os melhores valores de parâmetros encontrados em todos os dados, sem usar validação cruzada).
 
 ```{r}
 
 ```
-

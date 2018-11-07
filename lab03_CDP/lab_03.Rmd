@@ -1,0 +1,128 @@
+---
+title: "LAB03CDP"
+author: "José Glauber"
+date: "31 de outubro de 2018"
+output: html_notebook
+---
+## Importanto os dados e bibliotecas necessárias para as respostas das questões!
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+library(readr)
+library(caret)
+library(dplyr)
+library(ggplot2)
+```
+
+# Carregando informações e retirando informações que não são interessantes para o nosso modelo (discutido anteriormente)
+
+```{r}
+train_set <- read.csv("train.csv")
+train <- train_set %>% select(-cargo, -nome, -sequencial_candidato, -ocupacao)
+```
+
+## Perguntas
+
+1) Usando todas as variáveis disponíveis, tune (usando validação cruzada): (i) um modelo de regressão Ridge, (ii) um modelo de regressão Lasso e (iii) um modelo KNN. Para os modelos de regressão linear, o parâmetro a ser tunado é o lambda (penalização dos coeficientes) e o KNN o número de vizinhos.
+
+
+#Validação cruzada 
+
+```{r}
+train_control <- trainControl(method = "cv", number = 5)
+
+preProcValues <- c("center", "scale", "nzv")
+```
+
+(i) um modelo de regressão Ridge
+
+```{r}
+model.ridge <- train(votos ~ ., 
+               data = train,
+               trControl = train_control,
+               method = "ridge",
+               preProcess = preProcValues,
+               tuneLength = 20)
+model.ridge
+```
+
+
+(ii) O modelo de regressão Lasso
+
+```{r}
+model.lasso <- train(votos ~ .,
+                     data = train,
+                     trControl = train_control,
+                     method = "lasso",
+                     preProcess = preProcValues,
+                     tuneLength = 20)
+model.lasso
+```
+
+(iii) O modelo KNN
+
+```{r}
+model.knn <- train(votos ~ .,
+                   data = train,
+                   method = "knn",
+                   trControl = train_control,
+                   preProcess = preProcValues,
+                   tuneLength = 20)
+model.knn
+```
+
+2) Compare os três modelos em termos do erro RMSE de validação cruzada.
+
+  RMSE do modelo ridge: 38841.80
+  RMSE do modelo lasso: 41536.70
+  RMSE do modelo knn: 35191.48
+  
+  Podemos verificar que dentro os modelos, o menor RMSE é o do modelo KNN, em seguida temos o do Ridge e por último, o Lasso.
+  
+3) Quais as variáveis mais importantes segundo o modelo de regressão Ridge e Lasso?  Variáveis foram descartadas pelo Lasso? Quais?
+
+```{r}
+ggplot(varImp(model.ridge))
+```
+
+
+
+```{r}
+ggplot(varImp(model.lasso))
+```
+  
+  Podemos analisar que as variáveis mais importantes para os dois modelos são as mesmas. No top 5, temos: total_receita, total_despesa, recurso_de_pessoas_juridicas, recurso_de_pessoas_fisicas, quantidade_de_fornecedores. As outras 11 (quantidade_despesas, media_receita, recursos_de_partido_politico, quantidade_doadores, quantidade_doacoes, grau, ocupacao, estado, estado_civil, partido, sexo, uf) também são importantes para o modelo, visto que elas aparecem plotadas, com algum valor, no gráfico. As variáveis descartadas, total de 4, foram aquelas que na plotagem do gráfico não apareceu com nenhum valor, são elas: ano, recursos_proprios, recursos_de_outros_candidatos.comites e media_despesa.
+  
+4) Re-treine o melhor modelo (usando os melhores valores de parâmetros encontrados em todos os dados, sem usar validação cruzada).
+
+```{r}
+best <- expand.grid(k = model.knn$bestTune)
+
+best.model <- train(votos ~ .,
+                    data = train,
+                    method = "knn",
+                    tuneGrid = best)
+best.model
+```
+
+5) Use esse último modelo treinado para prever os dados de teste disponíveis no challenge que criamos na plataforma Kaggle.
+
+
+```{r}
+test <- read.csv("test.csv")
+submission <- test %>%
+  select(sequencial_candidato)
+test <- test %>% 
+  select(-sequencial_candidato,
+         -nome,
+         -cargo,
+         -ocupacao)
+predictions <- predict(best.model, test) 
+submission$votos <- predictions
+submission <- submission %>% 
+  select(ID = sequencial_candidato,
+         votos = votos)
+write.csv(x = submission,
+          file = "sample_submission.csv",
+          row.names = FALSE)
+```

@@ -1,0 +1,62 @@
+---
+title: "lab_04_CDP"
+author: "José Glauber"
+date: "26 de novembro de 2018"
+output: html_document
+---
+## Importanto os dados e bibliotecas necessárias para as respostas das questões!
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+library(readr)
+library(caret)
+library(dplyr)
+```
+
+# Carregando informações e retirando informações que não são interessantes para o nosso modelo (discutido anteriormente)
+
+```{r}
+train_set <- read.csv("train.csv")
+train <- train_set %>% select(-nome, -cargo, -sequencial_candidato, -ocupacao)
+```
+
+## Perguntas
+
+1) Há desbalanceamento das classes (isto é, uma classe tem muito mais instâncias que outra)? Em que proporção? Quais efeitos colaterais o desbalanceamento de classes pode causar no classificador? Como você poderia tratar isso?
+
+```{r}
+
+
+```
+
+2) Treine: um modelo de KNN, regressão logística, uma árvore de decisão e um modelo de adaboost. Tune esses modelos usando validação cruzada e controle overfitting se necessário, considerando as particularidades de cada modelo.
+
+```{r}
+
+```
+
+3) Reporte precision, recall e f-measure no treino e validação. Há uma grande diferença de desempenho no treino/validação? Como você avalia os resultados? Justifique sua resposta.
+
+```{r}
+
+```
+
+4) Interprete as saídas dos modelos. Quais atributos parecem ser mais importantes de acordo com cada modelo?
+
+```{r}
+
+```
+
+5) Envie seus melhores modelos à competição do Kaggle. Faça pelo menos uma submissão. Sugestões para melhorar o modelo:
+
+  5.1) Experimente outros modelos (e.g. SVM, RandomForests e GradientBoosting).
+  
+  
+  5.2) Experimente balancear as classes,  caso estejam desbalanceadas.
+  
+
+  5.3) Experimente outras estratégias de ensembles (e.g. Stacking)
+
+```{r}
+
+```

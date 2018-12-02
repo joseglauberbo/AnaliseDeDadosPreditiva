@@ -2,52 +2,96 @@
 title: "lab_04_CDP"
 author: "José Glauber"
 date: "26 de novembro de 2018"
-output: html_document
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
 ---
-## Importanto os dados e bibliotecas necessárias para as respostas das questões!
+## Nessa atividade foi usado os conhecimentos sobre classificação para prever quais candidatos à Câmara de Deputados serão eleitos nas eleições de 2014.
 
 ```{r}
-knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
-library(readr)
+## Importanto os dados e bibliotecas necessárias para as respostas das questões!
+
 library(caret)
+library(tidyr)
 library(dplyr)
+theme_set(theme_bw())
+
 ```
 
-# Carregando informações e retirando informações que não são interessantes para o nosso modelo (discutido anteriormente)
+## Carregando informações e retirando informações que não são interessantes para o nosso modelo (discutido anteriormente)
+
+  Foi optado por não usar todas as variáveis para a construção dos moelos, pois podemos verificar que algumas variáveis não são importantes para esse, por exemplo: nome, sequencial_candidato, cargo, ocupacao e estado_civil, pois essas tem a intenção apenas
+de identificação e possui variações de valores categóricos.
 
 ```{r}
 train_set <- read.csv("train.csv")
-train <- train_set %>% select(-nome, -cargo, -sequencial_candidato, -ocupacao)
+test_set <- read.csv("test.csv")
+train <- train_set %>% select(-nome, -cargo, -sequencial_candidato, -ocupacao, -estado_civil)
+test <- test_set %>% select(-nome, -cargo, -sequencial_candidato, -ocupacao, -estado_civil)
 ```
 
-## Perguntas
+Perguntas
 
-1) Há desbalanceamento das classes (isto é, uma classe tem muito mais instâncias que outra)? Em que proporção? Quais efeitos colaterais o desbalanceamento de classes pode causar no classificador? Como você poderia tratar isso?
+## 1) Há desbalanceamento das classes (isto é, uma classe tem muito mais instâncias que outra)? Em que proporção? Quais efeitos colaterais o desbalanceamento de classes pode causar no classificador? Como você poderia tratar isso?
+
+  Para verificarmos se existe desbalanceamento das classes, podemos verificar a variável situacao, que indica se o candidato foi ou não eleito. Segue a contagem:
+  
+```{r}
+train %>% count(situacao)
+```
+  
+  Para melhorar a nossa verificação, podemos fazer um gráfico de barras que identifica em porcentagens os valores acima. Segue o gráfico:
+  
+```{r}
+total = nrow(train)
+balanceamento_classes <- train %>% count(situacao)
+ggplot(balanceamento_classes, aes(y = balanceamento_classes$n/total * 100, x = balanceamento_classes$situacao))+
+  geom_bar(stat="identity") +
+  labs(title = "Balanceamento das classes", x = "Situação", y = "Proporção (%)") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1), legend.position="none") +
+  theme(axis.text=element_text(size=8), axis.title=element_text(size=12,face="bold"))
+```
+  Com isso, podemos concluir que existe um enorme desbalanceamento (1026 eleitos e 6596 não-eleitos) nas classes. Porém podemos verificar que isso já era esperado, pois existe uma quantidade limitada de vagas para aqueles que serão eleitos mas não para aqueles que podem se candidatar, o que faz com que a quantidade de não-eleitos possa superar drasticamente, como segue na visualização. Como efeito colateral que isso pode causar podemos citar que: modelos podem ser enviesados, pois um modelo que represente os não-eleitos será bem mais consistente do que aquele que representa os eleitos, pois o primeiro tem um número bem maior de observações. Pode-se tratar na hora de fazer os modelos, com uma melhor filtragem, ou seja, verificar bem quais são as variáveis da base de dados que realmente são levadas em consideração para que o modelo seja bem feito.
+  
+## 2) Treine: um modelo de KNN, regressão logística, uma árvore de decisão e um modelo de adaboost. Tune esses modelos usando validação cruzada e controle overfitting se necessário, considerando as particularidades de cada modelo.
+
+Usando validação cruzada:
+
+```{r}
+train_control <- trainControl(method = "cv", number = 5)
+preProcValues <- c("center", "scale", "nz
+```
+
+i) Modelo de KNN 
+
+```{r}
+model.knn <- train(votos ~ .,
+                   data = train,
+                   method = "knn",
+                   trControl = train_control,
+                   preProcess = preProcValues,
+                   tuneLength = 20)
+model.knn
+```
+
+## 3) Reporte precision, recall e f-measure no treino e validação. Há uma grande diferença de desempenho no treino/validação? Como você avalia os resultados? Justifique sua resposta.
 
 ```{r}
 
-
 ```
 
-2) Treine: um modelo de KNN, regressão logística, uma árvore de decisão e um modelo de adaboost. Tune esses modelos usando validação cruzada e controle overfitting se necessário, considerando as particularidades de cada modelo.
+## 4) Interprete as saídas dos modelos. Quais atributos parecem ser mais importantes de acordo com cada modelo?
 
 ```{r}
 
 ```
 
-3) Reporte precision, recall e f-measure no treino e validação. Há uma grande diferença de desempenho no treino/validação? Como você avalia os resultados? Justifique sua resposta.
-
-```{r}
-
-```
-
-4) Interprete as saídas dos modelos. Quais atributos parecem ser mais importantes de acordo com cada modelo?
-
-```{r}
-
-```
-
-5) Envie seus melhores modelos à competição do Kaggle. Faça pelo menos uma submissão. Sugestões para melhorar o modelo:
+## 5) Envie seus melhores modelos à competição do Kaggle. Faça pelo menos uma submissão. Sugestões para melhorar o modelo:
 
   5.1) Experimente outros modelos (e.g. SVM, RandomForests e GradientBoosting).
   

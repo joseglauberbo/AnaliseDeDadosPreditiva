@@ -1,5 +1,5 @@
 ---
-title: "lab_04_CDP"
+title: "Predição de Eleição de Deputados"
 author: "José Glauber"
 date: "26 de novembro de 2018"
 output:
@@ -19,8 +19,8 @@ output:
 library(caret)
 library(tidyr)
 library(dplyr)
+library(readr)
 theme_set(theme_bw())
-
 ```
 
 ## Carregando informações e retirando informações que não são interessantes para o nosso modelo (discutido anteriormente)
@@ -64,13 +64,13 @@ Usando validação cruzada:
 
 ```{r}
 train_control <- trainControl(method = "cv", number = 5)
-preProcValues <- c("center", "scale", "nz
+preProcValues <- c("center", "scale", "nzv")
 ```
 
 i) Modelo de KNN 
 
-```{r}
-model.knn <- train(votos ~ .,
+```{r warning=FALSE}
+model.knn <- train(situacao ~ .,
                    data = train,
                    method = "knn",
                    trControl = train_control,
@@ -79,28 +79,316 @@ model.knn <- train(votos ~ .,
 model.knn
 ```
 
+ii) Modelo de regressão logística 
+
+```{r warning=FALSE} 
+regressao.logistica <- train(situacao ~ .,
+                  data = train,
+                  method="glm",
+                  trControl = train_control,
+                  family="binomial",
+                  tuneLength = 20)
+regressao.logistica
+```
+
+iii) Árvore de decisão
+
+```{r warning=FALSE}
+arvore.decisao <- caret::train(situacao ~ .,
+                  data = train,
+                  method = "rpart",
+                  trControl = train_control,
+                  cp=0.001,
+                  maxdepth=20,
+                  preProcess = preProcValues)
+arvore.decisao
+```
+
+iv) Adaboost
+
+```{r warning=FALSE}
+adaboost <- train(situacao ~ .,
+                  data = train,
+                  method = "adaboost",
+                  trControl = train_control,
+                  preProcess = preProcValues)
+adaboost
+```
+
+SEPARANDO OS MODELOS PARA AS PRÓXIMAS QUESTÕES:
+
+```{r}
+dataPartition <- createDataPartition(y = train$situacao, p=0.75, list=FALSE)
+
+train2 <- train[ dataPartition, ]
+test2 <- train[ -dataPartition, ]
+```
+
 ## 3) Reporte precision, recall e f-measure no treino e validação. Há uma grande diferença de desempenho no treino/validação? Como você avalia os resultados? Justifique sua resposta.
 
+i) Modelo de KNN
+
+  TREINO E TESTE
+  
 ```{r}
 
+train2$prediction <- predict(model.knn, train2)
+confMatrix <- confusionMatrix(train2$prediction, train2$situacao)
+
+acuracia_train <- confMatrix$overall['Accuracy']
+precisao_train <- precision(confMatrix$table, relevant = "eleito")
+recall_train <- recall(confMatrix$table, relevant = "eleito")
+f_measure_train <- F_meas(confMatrix$table, relevant = "eleito")
+
+
+test2$prediction <- predict(model.knn, test2)
+confMatrix <- confusionMatrix(test2$prediction, test2$situacao)
+
+acuracia_test <- confMatrix$overall['Accuracy']
+precisao_test <- precision(confMatrix$table, relevant = "eleito")
+recall_test <- recall(confMatrix$table, relevant = "eleito")
+f_measure_test <- F_meas(confMatrix$table, relevant = "eleito")
 ```
 
+```{r}
+print("ACURACIA_TRAIN:")
+acuracia_train
+print("ACURACIA_TEST:")
+acuracia_test
+```
+ 
+```{r}
+print("PRECISION_TRAIN:")
+precisao_train
+print("PRECISION_TEST:")
+precisao_test
+```
+
+```{r}
+print("RECALL_TRAIN:")
+recall_train
+print("RECALL_TEST:")
+recall_test
+```
+
+```{r}
+print("F-MEASURE_TRAIN:")
+f_measure_train
+print("F-MEASURE_TEST:")
+f_measure_test
+```
+  Os valores de acurácia, precision, recall e f-measure para o modelo do KNN deram valores muito próximos, tanto para o treino quanto para o teste, o que é algo bom para nosso modelo. O valor de acurácia foi 92%, ou seja, a precisão de observações corretamente classificadas foi alta. O de precision foi cerca de 75%, ou seja, essa porcentagem indica que 75% dos que foram classificados eleitos, foram realmente eleitos. O de recall deu cerca de 45%, ou seja, essa porcentagem indica que os candidatos que foram eleitos foram corretemente preditos. Já o valor de f-measure representa uma média hârmonica entre precision e recall. 
+  
+ii) Modelo de regressão logística 
+
+  TREINO E TESTE
+  
+```{r warning=FALSE}
+
+train2$prediction <- predict(regressao.logistica, train2)
+confMatrix <- confusionMatrix(train2$prediction, train2$situacao)
+
+acuracia_train <- confMatrix$overall['Accuracy']
+precisao_train <- precision(confMatrix$table, relevant = "eleito")
+recall_train <- recall(confMatrix$table, relevant = "eleito")
+f_measure_train <- F_meas(confMatrix$table, relevant = "eleito")
+
+
+test2$prediction <- predict(regressao.logistica, test2)
+confMatrix <- confusionMatrix(test2$prediction, test2$situacao)
+
+acuracia_test <- confMatrix$overall['Accuracy']
+precisao_test <- precision(confMatrix$table, relevant = "eleito")
+recall_test <- recall(confMatrix$table, relevant = "eleito")
+f_measure_test <- F_meas(confMatrix$table, relevant = "eleito")
+```
+
+```{r}
+print("ACURACIA_TRAIN:")
+acuracia_train
+print("ACURACIA_TEST:")
+acuracia_test
+```
+ 
+```{r}
+print("PRECISION_TRAIN:")
+precisao_train
+print("PRECISION_TEST:")
+precisao_test
+```
+
+```{r}
+print("RECALL_TRAIN:")
+recall_train
+print("RECALL_TEST:")
+recall_test
+```
+
+```{r}
+print("F-MEASURE_TRAIN:")
+f_measure_train
+print("F-MEASURE_TEST:")
+f_measure_test
+```
+  Os valores de acurácia, precision, recall e f-measure para o modelo de Regressão Logística deram valores muito próximos, tanto para o treino quanto para o teste, o que é algo bom para nosso modelo. O valor de acurácia foi 91%, ou seja, a precisão de observações corretamente classificadas foi alta. O de precision foi cerca de 78%, ou seja, essa porcentagem indica que 78% dos que foram classificados eleitos, foram realmente eleitos. O de recall deu cerca de 55%, ou seja, essa porcentagem indica que os candidatos que foram eleitos foram corretemente preditos. Já o valor de f-measure representa uma média hârmonica entre precision e recall. 
+  
+iii) Árvore de decisão 
+
+  TREINO E TESTE
+  
+```{r warning=FALSE}
+
+train2$prediction <- predict(arvore.decisao, train2)
+confMatrix <- confusionMatrix(train2$prediction, train2$situacao)
+
+acuracia_train <- confMatrix$overall['Accuracy']
+precisao_train <- precision(confMatrix$table, relevant = "eleito")
+recall_train <- recall(confMatrix$table, relevant = "eleito")
+f_measure_train <- F_meas(confMatrix$table, relevant = "eleito")
+
+
+test2$prediction <- predict(arvore.decisao, test2)
+confMatrix <- confusionMatrix(test2$prediction, test2$situacao)
+
+acuracia_test <- confMatrix$overall['Accuracy']
+precisao_test <- precision(confMatrix$table, relevant = "eleito")
+recall_test <- recall(confMatrix$table, relevant = "eleito")
+f_measure_test <- F_meas(confMatrix$table, relevant = "eleito")
+```
+
+```{r}
+print("ACURACIA_TRAIN:")
+acuracia_train
+print("ACURACIA_TEST:")
+acuracia_test
+```
+ 
+```{r}
+print("PRECISION_TRAIN:")
+precisao_train
+print("PRECISION_TEST:")
+precisao_test
+```
+
+```{r}
+print("RECALL_TRAIN:")
+recall_train
+print("RECALL_TEST:")
+recall_test
+```
+
+```{r}
+print("F-MEASURE_TRAIN:")
+f_measure_train
+print("F-MEASURE_TEST:")
+f_measure_test
+```
+
+  Os valores de acurácia, precision, recall e f-measure para o modelo do Árvore de decisão deram valores muito próximos, tanto para o treino quanto para o teste, o que é algo bom para nosso modelo. O valor de acurácia foi 90%, ou seja, a precisão de observações corretamente classificadas foi alta. O de precision foi cerca de 57%, ou seja, essa porcentagem indica que 62% dos que foram classificados eleitos, foram realmente eleitos. O de recall deu cerca de 80%, ou seja, essa porcentagem indica que os candidatos que foram eleitos foram corretamente preditos. Já o valor de f-measure representa uma média hârmonica entre precision e recall. 
+  
+iii) Adaboost
+
+  TREINO E TESTE
+  
+```{r}
+
+train2$prediction <- predict(adaboost, train2)
+confMatrix <- confusionMatrix(train2$prediction, train2$situacao)
+
+acuracia_train <- confMatrix$overall['Accuracy']
+precisao_train <- precision(confMatrix$table, relevant = "eleito")
+recall_train <- recall(confMatrix$table, relevant = "eleito")
+f_measure_train <- F_meas(confMatrix$table, relevant = "eleito")
+
+
+test2$prediction <- predict(adaboost, test2)
+confMatrix <- confusionMatrix(test2$prediction, test2$situacao)
+
+acuracia_test <- confMatrix$overall['Accuracy']
+precisao_test <- precision(confMatrix$table, relevant = "eleito")
+recall_test <- recall(confMatrix$table, relevant = "eleito")
+f_measure_test <- F_meas(confMatrix$table, relevant = "eleito")
+```
+
+```{r} 
+print("ACURACIA_TRAIN:")
+acuracia_train
+print("ACURACIA_TEST:")
+acuracia_test
+```
+ 
+```{r}
+print("PRECISION_TRAIN:")
+precisao_train
+print("PRECISION_TEST:")
+precisao_test
+```
+
+```{r}
+print("RECALL_TRAIN:")
+recall_train
+print("RECALL_TEST:")
+recall_test
+```
+
+```{r}
+print("F-MEASURE_TRAIN:")
+f_measure_train
+print("F-MEASURE_TEST:")
+f_measure_test
+```
+  
 ## 4) Interprete as saídas dos modelos. Quais atributos parecem ser mais importantes de acordo com cada modelo?
 
+ i) Modelo KNN
 ```{r}
-
+  ggplot(varImp(model.knn)) +
+  geom_bar(stat="identity") +
+  labs(title="Importância das variáveis - Regressão Logística", y="Importância", x="Variável")
+```
+  Podemos verificar que para o modelo KNN as cinco variáveis de maior importância são: total_despesa, total_receita, quantidade_fornecedores, quantidade_despesas e recursos_de_pessoas_juridicas e que essas possuem uma variação não muito alta.
+  
+  ii) Regressão Logística
+```{r}
+  ggplot(varImp(regressao.logistica)) +
+  geom_bar(stat="identity") +
+  labs(title="Importância das variáveis - Regressão Logística", y="Importância", x="Variável")
+```
+ 
+ Podemos verificar que para o modelo KNN as cinco variáveis de maior importância são: ano e recurso_de_pessoas_fisicas e que essas possuem uma variação não muito alta.
+ 
+  iii) Árvore de decisão
+  
+```{r}
+   ggplot(varImp(arvore.decisao)) +
+  geom_bar(stat="identity") +
+  labs(title="Importância das variáveis - Regressão Logística", y="Importância", x="Variável")
+```
+  Apenas 5 atributos foram levados em consideração para construção da árvore. As 5 variáveis mais importantes foram: total_receitas, total_despesa, recurso_de_pessoas_juridicas, quantidade_fornecedores e quantidade_despesas.
+  
+  iv) Adaboost
+```{r}
+  ggplot(varImp(adaboost)) +
+  geom_bar(stat="identity") +
+  labs(title="Importância das variáveis - Regressão Logística", y="Importância", x="Variável")
 ```
 
+  As 5 variáveis mais importantes para o modelo Adaboost foram: total_despesa, total_receita, quantidade_fornecedores, quantidade_despesas e recurso_de_pessoas_juridicas.
+  
 ## 5) Envie seus melhores modelos à competição do Kaggle. Faça pelo menos uma submissão. Sugestões para melhorar o modelo:
 
-  5.1) Experimente outros modelos (e.g. SVM, RandomForests e GradientBoosting).
-  
-  
-  5.2) Experimente balancear as classes,  caso estejam desbalanceadas.
-  
-
-  5.3) Experimente outras estratégias de ensembles (e.g. Stacking)
+i) Modelo KNN 
 
 ```{r}
+train <- read.csv("train.csv")
+predictions <- predict(model.knn, train)
+submission <- data.frame(ID = train$sequencial_candidato, prediction = predictions)
+write.csv(submission, "model.knn.csv", row.names = FALSE)
+```
 
+```{r}
+train <- read.csv("train.csv")
+predictions <- predict(arvore.decisao, train)
+submission <- data.frame(ID = train$sequencial_candidato, prediction = predictions)
+write.csv(submission, "arvore.decisao.csv", row.names = FALSE)
 ```
